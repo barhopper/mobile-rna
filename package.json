@@ -15,7 +15,9 @@
     "preset": "jest-expo"
   },
   "husky": {
-    "pre-commit": "lint-staged"
+    "hooks": {
+      "pre-commit": "lint-staged"
+    }
   },
   "dependencies": {
     "@expo/vector-icons": "~10.0.6",

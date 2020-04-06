@@ -1,12 +1,15 @@
-import { Ionicons } from '@expo/vector-icons';
-import * as WebBrowser from 'expo-web-browser';
-import * as React from 'react';
-import { StyleSheet, Text, View } from 'react-native';
-import { RectButton, ScrollView } from 'react-native-gesture-handler';
+import {Ionicons} from '@expo/vector-icons'
+import * as WebBrowser from 'expo-web-browser'
+import * as React from 'react'
+import {StyleSheet, Text, View} from 'react-native'
+import {RectButton, ScrollView} from 'react-native-gesture-handler'
 
 export default function LinksScreen() {
   return (
-    <ScrollView style={styles.container} contentContainerStyle={styles.contentContainer}>
+    <ScrollView
+      style={styles.container}
+      contentContainerStyle={styles.contentContainer}
+    >
       <OptionButton
         icon="md-school"
         label="Read the Expo documentation"
@@ -16,7 +19,9 @@ export default function LinksScreen() {
       <OptionButton
         icon="md-compass"
         label="Read the React Navigation documentation"
-        onPress={() => WebBrowser.openBrowserAsync('https://reactnavigation.org')}
+        onPress={() =>
+          WebBrowser.openBrowserAsync('https://reactnavigation.org')
+        }
       />
 
       <OptionButton
@@ -26,13 +31,16 @@ export default function LinksScreen() {
         isLastOption
       />
     </ScrollView>
-  );
+  )
 }
 
-function OptionButton({ icon, label, onPress, isLastOption }) {
+function OptionButton({icon, label, onPress, isLastOption}) {
   return (
-    <RectButton style={[styles.option, isLastOption && styles.lastOption]} onPress={onPress}>
-      <View style={{ flexDirection: 'row' }}>
+    <RectButton
+      style={[styles.option, isLastOption && styles.lastOption]}
+      onPress={onPress}
+    >
+      <View style={{flexDirection: 'row'}}>
         <View style={styles.optionIconContainer}>
           <Ionicons name={icon} size={22} color="rgba(0,0,0,0.35)" />
         </View>
@@ -41,7 +49,7 @@ function OptionButton({ icon, label, onPress, isLastOption }) {
         </View>
       </View>
     </RectButton>
-  );
+  )
 }
 
 const styles = StyleSheet.create({
@@ -71,4 +79,4 @@ const styles = StyleSheet.create({
     alignSelf: 'flex-start',
     marginTop: 1,
   },
-});
+})

@@ -7,25 +7,29 @@
         "jsx": true
       }
     },
-    "rules": {
-      "strict": 0
-    },
-    "plugins": ["jest", "plugin:react/recommended"],
+    "plugins": ["jest", "react", "react-native"],
     "extends": [
       "eslint:recommended",
       "eslint-config-prettier",
-      "react",
-      "react-native"
+      "plugin:react/recommended"
     ],
     "env": {
       "node": true,
       "browser": true,
-      "react-native/react-native": true,
-      "jest": true
+      "jest": true,
+      "react-native/react-native": true
     },
     "settings": {
       "react": {
         "version": "detect"
       }
+    },
+    "globals": {
+      "Platform": "readonly"
+    },
+    "rules": {
+      "strict": 0,
+      "react/display-name": 0,
+      "react/prop-types": 0
     }
-  }
+}
