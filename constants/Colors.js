@@ -1,5 +1,5 @@
-const tintColor = '#2f95dc';
-const brandPrimary = '#C42D3E';
+const tintColor = '#2f95dc'
+const brandPrimary = '#C42D3E'
 
 export default {
   tintColor,
@@ -14,4 +14,4 @@ export default {
   warningText: '#666804',
   noticeBackground: tintColor,
   noticeText: '#fff',
-};
+}
