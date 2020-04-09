@@ -1,16 +1,16 @@
 {
   "expo": {
-    "name": "mobile-rna",
-    "slug": "mobile-rna",
+    "name": "barHopper",
+    "slug": "barHopper",
     "platforms": ["ios", "android", "web"],
-    "version": "1.0.0",
+    "version": "0.0.1",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
     "scheme": "myapp",
     "splash": {
       "image": "./assets/images/splash.png",
       "resizeMode": "contain",
-      "backgroundColor": "#ffffff"
+      "backgroundColor": "#000000"
     },
     "updates": {
       "fallbackToCacheTimeout": 0

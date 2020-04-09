@@ -1,13 +1,25 @@
 import * as React from 'react'
 import {Platform, StatusBar, StyleSheet, View} from 'react-native'
+
+// Expo
 import {SplashScreen} from 'expo'
 import * as Font from 'expo-font'
 import {Ionicons} from '@expo/vector-icons'
+
+// Navigator
 import {NavigationContainer} from '@react-navigation/native'
 import {createStackNavigator} from '@react-navigation/stack'
-
 import BottomTabNavigator from './navigation/BottomTabNavigator'
 import useLinking from './navigation/useLinking'
+
+// Kitten UI
+import * as eva from '@eva-design/eva'
+import {ApplicationProvider} from '@ui-kitten/components'
+import {default as theme} from './constants/Theme'
+import {default as mapping} from './mapping.js' // <-- Import app mapping
+
+// ErrorBoundary
+import {default as ErrorBoundary} from './components/ErrorBoundary'
 
 const Stack = createStackNavigator()
 
@@ -30,6 +42,7 @@ export default function App(props) {
         await Font.loadAsync({
           ...Ionicons.font,
           'space-mono': require('./assets/fonts/SpaceMono-Regular.ttf'),
+          'OpenSans-Regular': require('./assets/fonts/OpenSans-Regular.ttf'),
         })
       } catch (e) {
         // We might want to provide this error information to an error reporting service
@@ -47,17 +60,25 @@ export default function App(props) {
     return null
   } else {
     return (
-      <View style={styles.container}>
-        {Platform.OS === 'ios' && <StatusBar barStyle="default" />}
-        <NavigationContainer
-          ref={containerRef}
-          initialState={initialNavigationState}
-        >
-          <Stack.Navigator>
-            <Stack.Screen name="Root" component={BottomTabNavigator} />
-          </Stack.Navigator>
-        </NavigationContainer>
-      </View>
+      <ApplicationProvider
+        {...eva}
+        theme={{...eva.light, ...theme}}
+        customMapping={mapping}
+      >
+        <ErrorBoundary>
+          <View style={styles.container}>
+            {Platform.OS === 'ios' && <StatusBar barStyle="default" />}
+            <NavigationContainer
+              ref={containerRef}
+              initialState={initialNavigationState}
+            >
+              <Stack.Navigator>
+                <Stack.Screen name="Root" component={BottomTabNavigator} />
+              </Stack.Navigator>
+            </NavigationContainer>
+          </View>
+        </ErrorBoundary>
+      </ApplicationProvider>
     )
   }
 }
@@ -65,6 +86,5 @@ export default function App(props) {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#fff',
   },
 })
