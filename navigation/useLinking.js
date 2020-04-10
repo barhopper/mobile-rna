@@ -14,6 +14,15 @@ export default function (containerRef) {
           Profile: 'profile',
         },
       },
+      SignIn: {
+        path: 'signin',
+      },
+      SignUp: {
+        path: 'signup',
+      },
+      ForgotPassword: {
+        path: 'forgot',
+      },
     },
   })
 }

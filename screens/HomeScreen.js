@@ -1,4 +1,4 @@
-import * as React from 'react'
+import React from 'react'
 import {StyleSheet} from 'react-native'
 import {Layout, Text} from '@ui-kitten/components'
 
@@ -17,6 +17,7 @@ HomeScreen.navigationOptions = {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+    padding: 15,
   },
   contentContainer: {
     paddingTop: 30,

@@ -8,8 +8,7 @@ import {Ionicons} from '@expo/vector-icons'
 
 // Navigator
 import {NavigationContainer} from '@react-navigation/native'
-import {createStackNavigator} from '@react-navigation/stack'
-import BottomTabNavigator from './navigation/BottomTabNavigator'
+import AuthStack from './navigation/AuthStack'
 import useLinking from './navigation/useLinking'
 
 // Kitten UI
@@ -21,7 +20,10 @@ import {default as mapping} from './mapping.js' // <-- Import app mapping
 // ErrorBoundary
 import {default as ErrorBoundary} from './components/ErrorBoundary'
 
-const Stack = createStackNavigator()
+import {androidTimerWorkaround} from './utils/androidTimer'
+
+// Use the android timer workaround to prevent problems with long timers
+androidTimerWorkaround()
 
 export default function App(props) {
   const [isLoadingComplete, setLoadingComplete] = React.useState(false)
@@ -72,9 +74,7 @@ export default function App(props) {
               ref={containerRef}
               initialState={initialNavigationState}
             >
-              <Stack.Navigator>
-                <Stack.Screen name="Root" component={BottomTabNavigator} />
-              </Stack.Navigator>
+              <AuthStack />
             </NavigationContainer>
           </View>
         </ErrorBoundary>
