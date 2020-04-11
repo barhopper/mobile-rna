@@ -32,7 +32,6 @@ function storeAfterResolve(key) {
 const storeResolvedUser = storeAfterResolve(USER_STORAGE_KEY)
 
 export function signUp(_key, email, password) {
-  console.log(arguments)
   return storeResolvedUser(auth.createUserWithEmailAndPassword(email, password))
 }
 
@@ -41,7 +40,7 @@ export function signIn(_key, email, password) {
 }
 
 export function signOut() {
-  auth.sighOut()
+  auth.signOut()
   return storeResolvedUser(Promise.resolve(null))
 }
 
