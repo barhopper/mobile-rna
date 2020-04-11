@@ -13,7 +13,8 @@ import useLinking from './navigation/useLinking'
 
 // Kitten UI
 import * as eva from '@eva-design/eva'
-import {ApplicationProvider} from '@ui-kitten/components'
+import {ApplicationProvider, IconRegistry} from '@ui-kitten/components'
+import {EvaIconsPack} from '@ui-kitten/eva-icons'
 import {default as theme} from './constants/Theme'
 import {default as mapping} from './mapping.js' // <-- Import app mapping
 
@@ -62,23 +63,26 @@ export default function App(props) {
     return null
   } else {
     return (
-      <ApplicationProvider
-        {...eva}
-        theme={{...eva.light, ...theme}}
-        customMapping={mapping}
-      >
-        <ErrorBoundary>
-          <View style={styles.container}>
-            {Platform.OS === 'ios' && <StatusBar barStyle="default" />}
-            <NavigationContainer
-              ref={containerRef}
-              initialState={initialNavigationState}
-            >
-              <AuthStack />
-            </NavigationContainer>
-          </View>
-        </ErrorBoundary>
-      </ApplicationProvider>
+      <>
+        <IconRegistry icons={EvaIconsPack} />
+        <ApplicationProvider
+          {...eva}
+          theme={{...eva.light, ...theme}}
+          customMapping={mapping}
+        >
+          <ErrorBoundary>
+            <View style={styles.container}>
+              {Platform.OS === 'ios' && <StatusBar barStyle="default" />}
+              <NavigationContainer
+                ref={containerRef}
+                initialState={initialNavigationState}
+              >
+                <AuthStack />
+              </NavigationContainer>
+            </View>
+          </ErrorBoundary>
+        </ApplicationProvider>
+      </>
     )
   }
 }
