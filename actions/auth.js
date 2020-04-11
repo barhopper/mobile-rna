@@ -39,8 +39,12 @@ export function signIn(_key, email, password) {
   return storeResolvedUser(auth.signInWithEmailAndPassword(email, password))
 }
 
-export function signOut() {
+export function signOut(doAfterSignOut) {
+  console.log('Signing out')
   auth.signOut()
+  if (typeof doAfterSignOut === 'function') {
+    doAfterSignOut()
+  }
   return storeResolvedUser(Promise.resolve(null))
 }
 

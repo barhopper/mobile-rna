@@ -1,4 +1,4 @@
-import {default as React} from 'react'
+import {default as React, useEffect} from 'react'
 import {createStackNavigator} from '@react-navigation/stack'
 import {useQuery} from 'react-query'
 
@@ -6,6 +6,7 @@ import {default as SignInScreen} from '../screens/SignInScreen'
 import {default as BottomTabNavigator} from '../navigation/BottomTabNavigator'
 
 // import {getCurrentUserFromStorage} from '../actions/auth'
+import {useUser, useUpdateUser} from '../contexts/userContext'
 
 const getCurrentUserFromStorage = () => Promise.resolve(null)
 
@@ -13,7 +14,13 @@ const Stack = createStackNavigator()
 
 export default function AuthStack() {
   const {data, status, error} = useQuery('user', getCurrentUserFromStorage)
-  // console.log(`data is ${data}`)
+  const user = useUser()
+  const updateUser = useUpdateUser()
+
+  useEffect(() => {
+    updateUser(data)
+  }, [data])
+
   switch (status) {
     case 'loading':
       return null
@@ -22,7 +29,7 @@ export default function AuthStack() {
     default:
       return (
         <Stack.Navigator>
-          {data ? (
+          {user ? (
             <Stack.Screen name="Root" component={BottomTabNavigator} />
           ) : (
             <>

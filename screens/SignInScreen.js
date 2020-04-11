@@ -1,29 +1,59 @@
 import React, {useState} from 'react'
 import {StyleSheet, View} from 'react-native'
-import {Layout, Input, Button, Text} from '@ui-kitten/components'
+import {Layout, Input, Button, Text, Icon} from '@ui-kitten/components'
 
 import {BrandGradient} from '../components/BrandGradient'
 import {signIn} from '../actions/auth'
 
+import {useUpdateUser} from '../contexts/userContext'
+
 // signIn doesnt use the normal theme so we need to overwrite but still stick to theme
 import {default as theme} from '../constants/Theme'
 
-const useControlledInput = (initial = '') => {
-  const [value, setValue] = useState(initial)
-  return {value, onChangeText: setValue}
-}
-
 export default function LoginScreen() {
-  const username = useControlledInput('')
-  const password = useControlledInput('')
+  const updateUser = useUpdateUser()
 
-  const handleLogin = () => {
-    signIn(null, username.value, password.value)
+  const [email, setEmail] = useState('')
+  const [emailError, setEmailError] = useState(null)
+  const clearEmailError = () => setEmailError(null)
+  const handleEmailChange = value => {
+    if (emailError) {
+      clearEmailError(null)
+    }
+    setEmail(value)
+  }
+
+  const [password, setPassword] = useState('')
+  const [passwordError, setPasswordError] = useState(null)
+  const clearPasswordError = () => setPasswordError(null)
+  const handlePasswordChange = value => {
+    if (passwordError) {
+      clearPasswordError(null)
+    }
+    setPassword(value)
+  }
+
+  const loginError = emailError || passwordError
+
+  const handleLogin = doAfterLogin => {
+    signIn(null, email, password)
       .then(user => {
-        console.log(user)
+        if (typeof doAfterLogin === 'function') {
+          doAfterLogin(user)
+        }
       })
       .catch(err => {
-        console.log(err)
+        const [input, message] = interpretLoginError(err)
+        switch (input) {
+          case 'email':
+            setEmailError(message)
+            break
+          case 'password':
+            setPasswordError(message)
+            break
+          default:
+            break
+        }
       })
   }
 
@@ -31,31 +61,48 @@ export default function LoginScreen() {
     <Layout style={styles.layout}>
       <BrandGradient style={styles.container}>
         <View style={styles.loginContainer}>
+          {loginError && (
+            <View style={styles.error}>
+              <Icon
+                name="alert-triangle-outline"
+                fill={theme['color-basic-100']}
+                style={styles.icon}
+              />
+              <Text style={[styles.lightText, {paddingLeft: 15}]}>
+                {loginError}
+              </Text>
+            </View>
+          )}
           <Input
             style={styles.input}
+            status={'basic'}
             label={evaProps => (
               <Text {...evaProps} style={[evaProps.style, styles.lightText]}>
                 Email
               </Text>
             )}
             placeholder="Enter Your Email"
-            {...username}
+            value={email}
+            onChangeText={handleEmailChange}
           />
           <Input
             style={styles.input}
+            status={'basic'}
             label={evaProps => (
               <Text {...evaProps} style={[evaProps.style, styles.lightText]}>
                 Password
               </Text>
             )}
             placeholder="Enter Your password"
-            {...password}
+            value={password}
+            onChangeText={handlePasswordChange}
             secureTextEntry
           />
+
           <Button
             style={[styles.button, styles.firstButton]}
             appearance="filled"
-            onPress={handleLogin}
+            onPress={() => handleLogin(updateUser)}
           >
             Login
           </Button>
@@ -108,4 +155,27 @@ const styles = StyleSheet.create({
   firstButton: {
     marginTop: 15,
   },
+  error: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    padding: 15,
+    borderRadius: 3,
+  },
+  icon: {
+    width: 24,
+    height: 24,
+  },
 })
+
+function interpretLoginError(error) {
+  const {message} = error
+  if (message.match('no user record')) {
+    return ['email', 'Email is invalid']
+  } else if (message.match('email address is bad')) {
+    return ['email', 'Email is invalid']
+  } else if (message.match('password is invalid')) {
+    return ['password', 'Password is incorrect']
+  }
+
+  return ['other', "We couldn't login"]
+}

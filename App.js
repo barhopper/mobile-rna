@@ -18,6 +18,9 @@ import {EvaIconsPack} from '@ui-kitten/eva-icons'
 import {default as theme} from './constants/Theme'
 import {default as mapping} from './mapping.js' // <-- Import app mapping
 
+// Global State stuff
+import {UserProvider} from './contexts/userContext'
+
 // ErrorBoundary
 import {default as ErrorBoundary} from './components/ErrorBoundary'
 
@@ -70,17 +73,19 @@ export default function App(props) {
           theme={{...eva.light, ...theme}}
           customMapping={mapping}
         >
-          <ErrorBoundary>
-            <View style={styles.container}>
-              {Platform.OS === 'ios' && <StatusBar barStyle="default" />}
-              <NavigationContainer
-                ref={containerRef}
-                initialState={initialNavigationState}
-              >
-                <AuthStack />
-              </NavigationContainer>
-            </View>
-          </ErrorBoundary>
+          <UserProvider>
+            <ErrorBoundary>
+              <View style={styles.container}>
+                {Platform.OS === 'ios' && <StatusBar barStyle="default" />}
+                <NavigationContainer
+                  ref={containerRef}
+                  initialState={initialNavigationState}
+                >
+                  <AuthStack />
+                </NavigationContainer>
+              </View>
+            </ErrorBoundary>
+          </UserProvider>
         </ApplicationProvider>
       </>
     )
