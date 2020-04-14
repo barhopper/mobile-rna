@@ -1,4 +1,5 @@
 import {default as React, useEffect} from 'react'
+import {StyleSheet} from 'react-native'
 import {createStackNavigator} from '@react-navigation/stack'
 import {useQuery} from 'react-query'
 
@@ -8,6 +9,8 @@ import {default as BottomTabNavigator} from '../navigation/BottomTabNavigator'
 
 // import {getCurrentUserFromStorage} from '../actions/auth'
 import {useUser, useUpdateUser} from '../contexts/userContext'
+
+import {default as theme} from '../constants/Theme'
 
 const getCurrentUserFromStorage = () => Promise.resolve(null)
 
@@ -29,7 +32,12 @@ export default function AuthStack() {
       throw new Error(error)
     default:
       return (
-        <Stack.Navigator>
+        <Stack.Navigator
+          screenOptions={{
+            headerTintColor: theme['color-basic-100'],
+            headerStyle: styles.header,
+          }}
+        >
           {user ? (
             <Stack.Screen name="root" component={BottomTabNavigator} />
           ) : (
@@ -43,3 +51,9 @@ export default function AuthStack() {
       )
   }
 }
+
+const styles = StyleSheet.create({
+  header: {
+    backgroundColor: theme['color-primary-500'],
+  },
+})

@@ -1,17 +1,17 @@
 import * as React from 'react'
 import {createStackNavigator} from '@react-navigation/stack'
 
-const Stack = createStackNavigator()
+import {default as CategorySelectScreen} from '../screens/HomeStack/CategorySelectScreen'
 
-const [Search, Listing, Detail, Review] = [null, null, null, null]
+const Stack = createStackNavigator()
 
 export default function HomeStack() {
   return (
-    <Stack.Navigator>
-      <Stack.Screen name="Search" component={Search} />
-      <Stack.Screen name="Listing" component={Listing} />
+    <Stack.Navigator headerMode="none">
+      <Stack.Screen name="home" component={CategorySelectScreen} />
+      {/* <Stack.Screen name="Listing" component={Listing} />
       <Stack.Screen name="Detail" component={Detail} />
-      <Stack.Screen name="Review" component={Review} />
+      <Stack.Screen name="Review" component={Review} /> */}
     </Stack.Navigator>
   )
 }
