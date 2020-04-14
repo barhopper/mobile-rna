@@ -39,6 +39,10 @@ export function signIn(_key, email, password) {
   return storeResolvedUser(auth.signInWithEmailAndPassword(email, password))
 }
 
+export function SignInAnonymous(_key) {
+  return storeResolvedUser(auth.signInAnonymously())
+}
+
 export function signOut(doAfterSignOut) {
   console.log('Signing out')
   auth.signOut()

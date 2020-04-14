@@ -20,9 +20,6 @@ export default function (containerRef) {
       SignUp: {
         path: 'signup',
       },
-      ForgotPassword: {
-        path: 'forgot',
-      },
     },
   })
 }

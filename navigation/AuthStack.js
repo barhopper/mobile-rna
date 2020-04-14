@@ -3,6 +3,7 @@ import {createStackNavigator} from '@react-navigation/stack'
 import {useQuery} from 'react-query'
 
 import {default as SignInScreen} from '../screens/SignInScreen'
+import {default as SignUpScreen} from '../screens/SignUpScreen'
 import {default as BottomTabNavigator} from '../navigation/BottomTabNavigator'
 
 // import {getCurrentUserFromStorage} from '../actions/auth'
@@ -30,12 +31,12 @@ export default function AuthStack() {
       return (
         <Stack.Navigator>
           {user ? (
-            <Stack.Screen name="Root" component={BottomTabNavigator} />
+            <Stack.Screen name="root" component={BottomTabNavigator} />
           ) : (
             <>
-              <Stack.Screen name="SignIn" component={SignInScreen} />
-              {/* <Stack.Screen name="SignUp" component={SignUp} />
-              <Stack.Screen name="Forgot" component={ForgotPassword} /> */}
+              <Stack.Screen name="signin" component={SignInScreen} />
+              <Stack.Screen name="signup" component={SignUpScreen} />
+              {/* <Stack.Screen name="Forgot" component={ForgotPassword} /> */}
             </>
           )}
         </Stack.Navigator>
