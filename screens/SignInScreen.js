@@ -1,5 +1,5 @@
 import React, {useState} from 'react'
-import {StyleSheet, View, ScrollView} from 'react-native'
+import {StyleSheet, View} from 'react-native'
 import {Layout, Input, Button, Text, Icon} from '@ui-kitten/components'
 
 import {BrandGradient} from '../components/BrandGradient'
@@ -72,73 +72,71 @@ export default function LoginScreen({navigation}) {
 
   return (
     <Layout style={styles.layout}>
-      <ScrollView>
-        <BrandGradient style={styles.container}>
-          <View style={styles.loginContainer}>
-            {loginError && (
-              <View style={styles.error}>
-                <Icon
-                  name="alert-triangle-outline"
-                  fill={theme['color-basic-100']}
-                  style={styles.icon}
-                />
-                <Text style={[styles.lightText, {paddingLeft: 15}]}>
-                  {loginError}
-                </Text>
-              </View>
+      <BrandGradient style={styles.container}>
+        <View style={styles.loginContainer}>
+          {loginError && (
+            <View style={styles.error}>
+              <Icon
+                name="alert-triangle-outline"
+                fill={theme['color-basic-100']}
+                style={styles.icon}
+              />
+              <Text style={[styles.lightText, {paddingLeft: 15}]}>
+                {loginError}
+              </Text>
+            </View>
+          )}
+          <Input
+            style={styles.input}
+            status={'basic'}
+            label={evaProps => (
+              <Text {...evaProps} style={[evaProps.style, styles.lightText]}>
+                Email
+              </Text>
             )}
-            <Input
-              style={styles.input}
-              status={'basic'}
-              label={evaProps => (
-                <Text {...evaProps} style={[evaProps.style, styles.lightText]}>
-                  Email
-                </Text>
-              )}
-              placeholder="Enter Your Email"
-              value={email}
-              onChangeText={handleEmailChange}
-            />
-            <Input
-              style={styles.input}
-              status={'basic'}
-              label={evaProps => (
-                <Text {...evaProps} style={[evaProps.style, styles.lightText]}>
-                  Password
-                </Text>
-              )}
-              placeholder="Enter Your password"
-              value={password}
-              onChangeText={handlePasswordChange}
-              secureTextEntry
-            />
+            placeholder="Enter Your Email"
+            value={email}
+            onChangeText={handleEmailChange}
+          />
+          <Input
+            style={styles.input}
+            status={'basic'}
+            label={evaProps => (
+              <Text {...evaProps} style={[evaProps.style, styles.lightText]}>
+                Password
+              </Text>
+            )}
+            placeholder="Enter Your password"
+            value={password}
+            onChangeText={handlePasswordChange}
+            secureTextEntry
+          />
 
-            <Button
-              style={[styles.button, styles.firstButton]}
-              appearance="filled"
-              onPress={handleLoginAsUser}
-            >
-              Login
-            </Button>
-            <Button
-              style={[styles.button, styles.buttonLight]}
-              appearance="outline"
-              status="basic"
-              onPress={pushToSignUp}
-            >
-              <Text style={styles.lightText}>Sign Up</Text>
-            </Button>
-            <Button
-              style={styles.button}
-              appearance="ghost"
-              status="basic"
-              onPress={handleLoginAsGuest}
-            >
-              <Text style={styles.lightText}>Continue Without Login</Text>
-            </Button>
-          </View>
-        </BrandGradient>
-      </ScrollView>
+          <Button
+            style={[styles.button, styles.firstButton]}
+            appearance="filled"
+            onPress={handleLoginAsUser}
+          >
+            Login
+          </Button>
+          <Button
+            style={[styles.button, styles.buttonLight]}
+            appearance="outline"
+            status="basic"
+            onPress={pushToSignUp}
+          >
+            <Text style={styles.lightText}>Sign Up</Text>
+          </Button>
+          <Button
+            style={styles.button}
+            appearance="ghost"
+            status="basic"
+            onPress={handleLoginAsGuest}
+          >
+            <Text style={styles.lightText}>Continue Without Login</Text>
+          </Button>
+        </View>
+      </BrandGradient>
     </Layout>
   )
 }
