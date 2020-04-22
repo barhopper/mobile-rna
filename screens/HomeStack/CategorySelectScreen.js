@@ -31,12 +31,11 @@ export default function CategorySelectScreen({navigation}) {
     } else {
       temp.add(item)
     }
-    console.log(temp)
     setSelected(temp)
   }
 
   const handleSearch = () => {
-    navigation.navigate('listing', {query: selected})
+    navigation.navigate('listing', {query: Array.from(selected)})
   }
 
   if (status === 'error') {

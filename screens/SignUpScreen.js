@@ -114,7 +114,6 @@ export default function SignUpScreen({navigation}) {
         }
       })
       .catch(err => {
-        console.log(err)
         const [input, message] = interpretSignupError(err)
         switch (input) {
           case 'email':

@@ -36,7 +36,7 @@ export default class ErrorBoundary extends Component {
             </Text>
           </View>
           <ScrollView style={{padding: 20, marginBottom: 80}}>
-            <Text> {this.state.error.toString()} </Text>
+            <Text> {this.state.errorInfo?.toString()} </Text>
           </ScrollView>
         </View>
       )

@@ -44,7 +44,6 @@ export function SignInAnonymous(_key) {
 }
 
 export function signOut(doAfterSignOut) {
-  console.log('Signing out')
   auth.signOut()
   if (typeof doAfterSignOut === 'function') {
     doAfterSignOut()
