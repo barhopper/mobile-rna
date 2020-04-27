@@ -49,6 +49,11 @@ export default function App(props) {
           ...Ionicons.font,
           'space-mono': require('./assets/fonts/SpaceMono-Regular.ttf'),
           'OpenSans-Regular': require('./assets/fonts/OpenSans-Regular.ttf'),
+          'OpenSans-Bold': require('./assets/fonts/OpenSans-Bold.ttf'),
+          'OpenSans-SemiBold': require('./assets/fonts/OpenSans-SemiBold.ttf'),
+          'OpenSans-Italic': require('./assets/fonts/OpenSans-Italic.ttf'),
+          'OpenSans-Light': require('./assets/fonts/OpenSans-Light.ttf'),
+          'OpenSans-ExtraBold': require('./assets/fonts/OpenSans-ExtraBold.ttf'),
         })
       } catch (e) {
         // We might want to provide this error information to an error reporting service

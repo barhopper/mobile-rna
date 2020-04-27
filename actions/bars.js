@@ -18,6 +18,7 @@ export function getCategories() {
 }
 
 export function searchForBars(_keys, options) {
+  console.log('Looking for bars with: ', options)
   let barQuery = firestore.collection('Bars')
 
   // add all the query params
@@ -29,15 +30,17 @@ export function searchForBars(_keys, options) {
     barQuery
       .get()
       .then(snapshot => {
+        // console.log(snapshot)
         const urlPromises = []
         //TODO this needs to add the url of the image in storage
-        const bars = snapshot.map(doc => {
-          const bar = doc?.data()
+        const bars = []
+        snapshot.forEach(doc => {
+          const bar = doc.data()
           let urlPromise = null
           if (bar.barCoverImage) {
-            urlPromise = imageRef?.child(bar.barCoverImage)?.getDownloadURL()
+            urlPromise = imageRef.child(bar.barCoverImage).getDownloadURL()
           } else {
-            urlPromise = imageRef?.child('generic_bar_00.png')?.getDownloadURL()
+            urlPromise = imageRef.child('generic_bar_00.png').getDownloadURL()
           }
 
           urlPromises.push(Promise.resolve(urlPromise))
@@ -48,13 +51,19 @@ export function searchForBars(_keys, options) {
             })
             .catch(() => {
               // Do nothing for now, we need a default image with public url to put here
+              return null
             })
+          bars.push(bar)
         })
 
         // when we have urls for all the images then we can resolve
-        Promise.allSettled(urlPromises).then(() => {
-          resolve(bars)
-        })
+        Promise.all(urlPromises)
+          .then(() => {
+            resolve(bars)
+          })
+          .catch(() => {
+            resolve(bars)
+          })
       })
       .catch(reject)
   })

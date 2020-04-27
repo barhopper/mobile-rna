@@ -1,16 +1,24 @@
 import {default as React, useState, useEffect} from 'react'
-import {StyleSheet, View, TouchableHighlight} from 'react-native'
-import {Layout, Text, Icon, Card, Spinner} from '@ui-kitten/components'
+import {
+  StyleSheet,
+  View,
+  TouchableHighlight,
+  TouchableOpacity,
+  Image,
+  Dimensions,
+} from 'react-native'
+import {Layout, Text, Icon, Spinner, List} from '@ui-kitten/components'
 
 import {default as theme} from '../../constants/Theme'
 import {useQuery} from 'react-query'
 import {searchForBars} from '../../actions/bars'
 
-export default function BarListScreen({route}) {
-  const [tags, setTags] = useState([])
-  const {error, status, data} = useQuery(['bars', tags], searchForBars)
-
+export default function BarListScreen({route, navigation}) {
   const {query} = route.params
+
+  const [tags, setTags] = useState(query)
+  const {error, status, data: bars} = useQuery(['bars', tags], searchForBars)
+
   useEffect(() => {
     setTags(query)
   }, [query])
@@ -19,18 +27,27 @@ export default function BarListScreen({route}) {
     throw error
   }
 
+  const handleTagPress = removedTag => {
+    if (tags.length > 1) {
+      setTags(current => current.filter(tag => tag !== removedTag))
+    } else {
+      navigation.goBack()
+    }
+  }
+
   return (
     <Layout style={styles.container}>
       <Layout style={styles.search}>
-        <Layout>
+        <View>
           <Text>I---------------[]-----------------------I</Text>
-        </Layout>
-        <Layout style={styles.tagContainer}>
+        </View>
+        <View style={styles.tagContainer}>
           {tags.map(tag => (
             <TouchableHighlight
               key={tag}
               style={styles.tag}
               underlayColor={theme['color-primary-200']}
+              onPress={() => handleTagPress(tag)}
             >
               <>
                 <Text style={styles.lightText}>{tag}</Text>
@@ -42,18 +59,13 @@ export default function BarListScreen({route}) {
               </>
             </TouchableHighlight>
           ))}
-        </Layout>
+        </View>
       </Layout>
-      <Layout>
-        {status === 'loading' ? (
-          <Spinner status="primary" size="giant" />
-        ) : (
-          <>
-            <Text>Results</Text>
-            <Text>{JSON.stringify(data)}</Text>
-          </>
-        )}
-      </Layout>
+      {status === 'loading' ? (
+        <Spinner status="primary" size="giant" />
+      ) : (
+        <List data={bars} renderItem={BarCard} />
+      )}
     </Layout>
   )
 }
@@ -66,6 +78,15 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     padding: 15,
+    backgroundColor: theme['color-basic-200'],
+  },
+  search: {
+    flex: 0.2,
+    backgroundColor: theme['color-basic-200'],
+  },
+  results: {
+    flex: 0.7,
+    justifyContent: 'flex-start',
   },
   tagContainer: {
     flexDirection: 'row',
@@ -93,14 +114,91 @@ const styles = StyleSheet.create({
   },
 })
 
-const barCard = ({barInfo}) => {
+const BarCard = ({item: bar}) => {
+  const {width} = Dimensions.get('window')
+  const infoWidth = width - 30 - 115 - 30
+  // Object {
+  //   "Karaoke": true,
+  //   "Loud": true,
+  //   "barAddress": "",
+  //   "barCoverImage": "generic_bar_01.png",
+  //   "barDescription": "",
+  //   "barEmail": "",
+  //   "barName": "O'Keefe's Bar & Grill",
+  //   "barOpeningHours": "",
+  //   "barPhone": "",
+  //   "barURL": "",
+  //   "imUrl": "https://firebasestorage.googleapis.com/v0/b/barhopper-269017.appspot.com/o/images%2Fgeneric_bar_01.png?alt=media&token=1f485973-314c-4533-93fe-14f6d91c77fe",
+  // }
   return (
-    <Card>
+    <TouchableOpacity style={cardStyles.card}>
       {/* Image */}
-      <View>
-        {/* Header */}
-        {/* Description */}
+      <View style={cardStyles.card}>
+        <View>
+          <Image style={cardStyles.image} source={{uri: bar.imUrl}} />
+        </View>
+        <View stytle={cardStyles.info}>
+          {/* Header */}
+          <View style={cardStyles.header}>
+            <Text category="h6">{bar.barName}</Text>
+          </View>
+          <View style={cardStyles.redbar}></View>
+          {/* Description */}
+          <Text
+            category="p2"
+            appearance="hint"
+            style={[cardStyles.details, {width: infoWidth}]}
+            numberOfLines={3}
+          >
+            Lorem Ipsum Bar Details and All That Jazzzz, Lorem Ipsum Bar Details
+            and All That Jazzzz, Lorem Ipsum Bar Details and All That Jazzzz,
+            Lorem Ipsum Bar Details and All That Jazzzz, Lorem Ipsum Bar Details
+            and All That JazzzzLorem Ipsum Bar Details and All That Jazzzz
+          </Text>
+        </View>
       </View>
-    </Card>
+    </TouchableOpacity>
   )
 }
+
+const cardStyles = StyleSheet.create({
+  card: {
+    height: 115,
+    borderRadius: 10,
+    flexDirection: 'row',
+    padding: 0,
+    backgroundColor: theme['color-basic-100'],
+    marginBottom: 10,
+    flex: 1,
+  },
+  image: {
+    height: 115,
+    width: 115,
+    borderTopLeftRadius: 10,
+    borderBottomLeftRadius: 10,
+    marginRight: 15,
+  },
+  info: {
+    flex: 1,
+    flexDirection: 'column',
+    justifyContent: 'flex-start',
+    flexWrap: 'wrap',
+    height: 115,
+    borderTopRightRadius: 10,
+    borderBottomRightRadius: 10,
+    overflow: 'hidden',
+  },
+  header: {
+    marginTop: 10,
+  },
+  redbar: {
+    height: 1,
+    width: 30,
+    borderBottomColor: theme['color-primary-500'],
+    borderBottomWidth: 3,
+    marginBottom: 10,
+  },
+  lightText: {
+    color: theme['color-basic-100'],
+  },
+})
