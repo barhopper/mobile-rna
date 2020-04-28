@@ -1,4 +1,5 @@
 import {firestore, imageRef} from '../services/firebase'
+import {doWithLocation} from '../utils/permissions'
 
 export function getCategories() {
   return new Promise((resolve, reject) => {
@@ -19,6 +20,8 @@ export function getCategories() {
 
 export function searchForBars(_keys, options) {
   console.log('Looking for bars with: ', options)
+  doWithLocation(loc => console.log('Location is ', loc))
+
   let barQuery = firestore.collection('Bars')
 
   // add all the query params
