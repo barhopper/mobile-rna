@@ -1,3 +1,4 @@
+import {InteractionManager} from 'react-native'
 /**
  * on android long calls to setTimeout can cause issues by locking up the timer
  * this prevents that
@@ -13,13 +14,16 @@ export function androidTimerWorkaround() {
     const runTask = (id, fn, ttl, args) => {
       const waitingTime = ttl - Date.now()
       if (waitingTime <= 1) {
-        InteractionManager.runAfterInteractions(() => {
-          if (!timerFix[id]) {
-            return
-          }
-          delete timerFix[id]
-          fn(...args)
-        })
+        try {
+          InteractionManager.runAfterInteractions(() => {
+            if (!timerFix[id]) {
+              return
+            }
+            delete timerFix[id]
+            fn(...args)
+          })
+          // eslint-disable-next-line no-empty
+        } catch (e) {}
         return
       }
 

@@ -46,7 +46,9 @@ export async function doWithLocation(callback) {
   if (await getPermissionAsync(Permissions.LOCATION)) {
     const location = await Location.getCurrentPositionAsync({})
     if (location) {
-      callback(location)
+      return callback(location)
     }
+  } else {
+    return null
   }
 }

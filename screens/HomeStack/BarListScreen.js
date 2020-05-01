@@ -5,6 +5,7 @@ import {
   TouchableHighlight,
   TouchableOpacity,
   Image,
+  Slider,
   Dimensions,
 } from 'react-native'
 import {Layout, Text, Icon, Spinner, List} from '@ui-kitten/components'
@@ -16,8 +17,14 @@ import {searchForBars} from '../../actions/bars'
 export default function BarListScreen({route, navigation}) {
   const {query} = route.params
 
+  const [distance, setDistance] = useState(1)
+  const [searchDistance, setSearchDistance] = useState(1)
+
   const [tags, setTags] = useState(query)
-  const {error, status, data: bars} = useQuery(['bars', tags], searchForBars)
+  const {error, status, data: bars} = useQuery(
+    ['bars', tags, searchDistance],
+    searchForBars,
+  )
 
   useEffect(() => {
     setTags(query)
@@ -38,8 +45,21 @@ export default function BarListScreen({route, navigation}) {
   return (
     <Layout style={styles.container}>
       <Layout style={styles.search}>
-        <View>
-          <Text>I---------------[]-----------------------I</Text>
+        <View style={styles.sliderContainer}>
+          <Text category="label">Distance</Text>
+          <Slider
+            style={{width: 200, height: 40}}
+            minimumTrackTintColor={theme['color-primary-300']}
+            maximumTrackTintColor="#000000"
+            thumbTintColor={theme['color-primary-500']}
+            minimumValue={0.5}
+            maximumValue={25}
+            step={0.5}
+            value={distance}
+            onValueChange={setDistance}
+            onSlidingComplete={setSearchDistance}
+          />
+          <Text category="label">{distance} Km</Text>
         </View>
         <View style={styles.tagContainer}>
           {tags.map(tag => (
@@ -79,14 +99,19 @@ const styles = StyleSheet.create({
     flex: 1,
     padding: 15,
     backgroundColor: theme['color-basic-200'],
+    paddingVertical: 0,
   },
   search: {
-    flex: 0.2,
     backgroundColor: theme['color-basic-200'],
+    marginBottom: 15,
   },
   results: {
     flex: 0.7,
     justifyContent: 'flex-start',
+  },
+  sliderContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
   },
   tagContainer: {
     flexDirection: 'row',
@@ -115,6 +140,10 @@ const styles = StyleSheet.create({
 })
 
 const BarCard = ({item: bar}) => {
+  const {
+    hitMetadata: {distance},
+  } = bar
+
   const {width} = Dimensions.get('window')
   const infoWidth = width - 30 - 115 - 30
   // Object {
@@ -140,7 +169,10 @@ const BarCard = ({item: bar}) => {
         <View stytle={cardStyles.info}>
           {/* Header */}
           <View style={cardStyles.header}>
-            <Text category="h6">{bar.barName}</Text>
+            <Text category="label" style={{fontWeight: 'bold', fontSize: 12}}>
+              {bar.barName}
+            </Text>
+            <Text category="label">{distance.toFixed(2)} km</Text>
           </View>
           <View style={cardStyles.redbar}></View>
           {/* Description */}
@@ -190,6 +222,9 @@ const cardStyles = StyleSheet.create({
   },
   header: {
     marginTop: 10,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'flex-end',
   },
   redbar: {
     height: 1,
