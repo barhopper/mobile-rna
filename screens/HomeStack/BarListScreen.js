@@ -1,4 +1,4 @@
-import {default as React, useState, useEffect} from 'react'
+import {default as React, useState, useRef, useEffect} from 'react'
 import {
   StyleSheet,
   View,
@@ -13,25 +13,96 @@ import {Layout, Text, Icon, Spinner, List} from '@ui-kitten/components'
 import {default as theme} from '../../constants/Theme'
 import {useQuery} from 'react-query'
 import {searchForBars} from '../../actions/bars'
+import {watchLocationWithPermission} from '../../utils/permissions'
+import {geo} from '../../services/firebase'
+
+/***********************************************************
+ *
+ *
+ *  BAR LIST
+ *
+ *
+ ***********************************************************/
 
 export default function BarListScreen({route, navigation}) {
   const {query} = route.params
 
-  const [distance, setDistance] = useState(1)
-  const [searchDistance, setSearchDistance] = useState(1)
+  const [distance, setDistance] = useState(3)
+  const [searchDistance, setSearchDistance] = useState(3)
+
+  // Maybe we can get an initial location on the category scene to kick off
+  const [location, setLocation] = useState([0, 0])
+  const [bars, setBars] = useState([])
 
   const [tags, setTags] = useState(query)
-  const {error, status, data: bars} = useQuery(
-    ['bars', tags, searchDistance],
+
+  const subscription = useRef(null)
+
+  // Using a manuel query to get a little more fine grained control
+  const {error, status, data, isFetching} = useQuery(
+    ['bars', searchDistance, location],
     searchForBars,
   )
+
+  useEffect(() => {
+    navigation.addListener('focus', () => {
+      // do something
+      subscription.current = watchLocationWithPermission(handleLocationChange)
+    })
+
+    navigation.addListener('blur', () => {
+      // do something
+      subscription.current?.remove?.()
+    })
+  }, [navigation])
 
   useEffect(() => {
     setTags(query)
   }, [query])
 
+  useEffect(() => {
+    if (!Array.isArray(data) || isFetching) {
+      return
+    }
+
+    console.log('Data', data)
+    console.log('Tags', tags)
+    const filteredBars = data.filter(bar => {
+      for (const tag of tags) {
+        if (bar[tag] !== true) return false
+      }
+
+      return true
+    })
+
+    setBars(filteredBars)
+  }, [data, tags, isFetching])
+
   if (status === 'error') {
     throw error
+  }
+
+  const handleLocationChange = loc => {
+    const {
+      coords: {latitude, longitude},
+    } = loc
+    const newPoint = geo.point(latitude, longitude)
+
+    if (!location) {
+      setLocation([latitude, longitude])
+    } else {
+      setLocation(currentLoc => {
+        const [currentLat, currentLon] = currentLoc
+        const currentPoint = geo.point(currentLat, currentLon)
+
+        const diff = geo.distance(newPoint, currentPoint)
+        if (diff >= searchDistance * 0.1) {
+          return [latitude, longitude]
+        } else {
+          return currentLoc
+        }
+      })
+    }
   }
 
   const handleTagPress = removedTag => {
@@ -139,6 +210,13 @@ const styles = StyleSheet.create({
   },
 })
 
+/***********************************************************
+ *
+ *
+ *  BAR CARD
+ *
+ *
+ ***********************************************************/
 const BarCard = ({item: bar}) => {
   const {
     hitMetadata: {distance},

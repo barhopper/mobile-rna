@@ -1,5 +1,4 @@
 import {firestore, imageRef, geo} from '../services/firebase'
-import {doWithLocation} from '../utils/permissions'
 import {get} from 'geofirex'
 
 export function getCategories() {
@@ -19,67 +18,58 @@ export function getCategories() {
   })
 }
 
-export function searchForBars(_keys, options, distance) {
+export function searchForBars(_keys, distance, position) {
   // Lets get the users location
+  console.log('Fetching Bars', distance, position)
+  if (!distance || !position) {
+    return Promise.resolve([])
+  }
 
-  let barQuery = firestore.collection('Bars')
-
-  // add all the query params
-  options.forEach(opt => {
-    barQuery = barQuery.where(opt, '==', true)
-  })
-
-  // This returns a promise that resolves to the return value of the function we pass
-  let center = doWithLocation(loc => {
-    const {
-      coords: {latitude, longitude},
-    } = loc
-    return geo.point(latitude, longitude)
-  })
+  position = geo.point(...position)
 
   return new Promise((resolve, reject) => {
-    center.then(userLocation => {
-      const geoQuery = geo
-        .query(barQuery)
-        .within(userLocation, distance, 'position')
+    const geoQuery = geo.query('Bars').within(position, distance, 'position')
 
-      get(geoQuery)
-        .then(snapshot => {
-          console.log(snapshot)
-          const urlPromises = []
-          //TODO this needs to add the url of the image in storage
-          const bars = []
-          snapshot.forEach(bar => {
-            let urlPromise = null
-            if (bar.barCoverImage) {
-              urlPromise = imageRef.child(bar.barCoverImage).getDownloadURL()
-            } else {
-              urlPromise = imageRef.child('generic_bar_00.png').getDownloadURL()
-            }
+    get(geoQuery)
+      .then(snapshot => {
+        // console.log(snapshot)
+        const urlPromises = []
+        //TODO this needs to add the url of the image in storage
+        const bars = []
+        snapshot.forEach(bar => {
+          let urlPromise = null
+          if (bar.barCoverImage) {
+            urlPromise = imageRef.child(bar.barCoverImage).getDownloadURL()
+          } else {
+            urlPromise = imageRef.child('generic_bar_00.png').getDownloadURL()
+          }
 
-            urlPromises.push(Promise.resolve(urlPromise))
+          urlPromises.push(Promise.resolve(urlPromise))
 
-            urlPromise
-              .then(url => {
-                bar.imUrl = url
-              })
-              .catch(() => {
-                // Do nothing for now, we need a default image with public url to put here
-                return null
-              })
-            bars.push(bar)
-          })
-
-          // when we have urls for all the images then we can resolve
-          Promise.all(urlPromises)
-            .then(() => {
-              resolve(bars)
+          urlPromise
+            .then(url => {
+              bar.imUrl = url
             })
             .catch(() => {
-              resolve(bars)
+              // Do nothing for now, we need a default image with public url to put here
+              return null
             })
+
+          bars.push(bar)
         })
-        .catch(reject)
-    })
+
+        // when we have urls for all the images then we can resolve
+        Promise.all(urlPromises)
+          .then(() => {
+            resolve(bars)
+          })
+          .catch(() => {
+            resolve(bars)
+          })
+          .finally(() => {
+            console.log(bars.length)
+          })
+      })
+      .catch(reject)
   })
 }

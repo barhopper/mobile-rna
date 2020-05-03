@@ -5,8 +5,8 @@ import * as Permissions from 'expo-permissions'
 import {Alert} from 'react-native'
 
 const GEOLOCATION_OPTIONS = {
-  // enableHighAccuracy: true,
-  // accuracy: Location.Accuracy.Highest,
+  enableHighAccuracy: true,
+  accuracy: Location.Accuracy.Highest,
   timeInterval: 5000,
   distanceInterval: 0,
 }
@@ -42,11 +42,11 @@ export async function watchLocationWithPermission(
   }
 }
 
-export async function doWithLocation(callback) {
+export async function getLocation(formatter = loc => loc) {
   if (await getPermissionAsync(Permissions.LOCATION)) {
     const location = await Location.getCurrentPositionAsync({})
     if (location) {
-      return callback(location)
+      return formatter(location)
     }
   } else {
     return null
