@@ -28,11 +28,12 @@ export function searchForBars(_keys, distance, position) {
   position = geo.point(...position)
 
   return new Promise((resolve, reject) => {
-    const geoQuery = geo.query('Bars').within(position, distance, 'position')
+    const geoQuery = geo
+      .query('Bars')
+      .within(position, distance, 'position', {units: 'mi'})
 
     get(geoQuery)
       .then(snapshot => {
-        // console.log(snapshot)
         const urlPromises = []
         //TODO this needs to add the url of the image in storage
         const bars = []
@@ -48,7 +49,7 @@ export function searchForBars(_keys, distance, position) {
 
           urlPromise
             .then(url => {
-              bar.imUrl = url
+              bar.imgUrl = url
             })
             .catch(() => {
               // Do nothing for now, we need a default image with public url to put here
@@ -66,10 +67,27 @@ export function searchForBars(_keys, distance, position) {
           .catch(() => {
             resolve(bars)
           })
-          .finally(() => {
-            console.log(bars.length)
-          })
       })
       .catch(reject)
   })
 }
+
+export function getQuestions() {
+  return new Promise((resolve, reject) => {
+    const data = []
+    firestore
+      .collection('Questions')
+      .get()
+      .then(snapshot => {
+        snapshot.forEach(doc => {
+          const question = doc.data()
+          question.id = doc.id
+          data.push(question)
+        })
+        resolve(data)
+      })
+      .catch(reject)
+  })
+}
+
+export function submitReview() {}

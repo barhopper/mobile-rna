@@ -65,8 +65,6 @@ export default function BarListScreen({route, navigation}) {
       return
     }
 
-    console.log('Data', data)
-    console.log('Tags', tags)
     const filteredBars = data.filter(bar => {
       for (const tag of tags) {
         if (bar[tag] !== true) return false
@@ -113,6 +111,10 @@ export default function BarListScreen({route, navigation}) {
     }
   }
 
+  const handleSelect = bar => {
+    navigation.navigate('details', {bar})
+  }
+
   return (
     <Layout style={styles.container}>
       <Layout style={styles.search}>
@@ -130,7 +132,7 @@ export default function BarListScreen({route, navigation}) {
             onValueChange={setDistance}
             onSlidingComplete={setSearchDistance}
           />
-          <Text category="label">{distance} Km</Text>
+          <Text category="label">{distance} Mi.</Text>
         </View>
         <View style={styles.tagContainer}>
           {tags.map(tag => (
@@ -155,7 +157,10 @@ export default function BarListScreen({route, navigation}) {
       {status === 'loading' ? (
         <Spinner status="primary" size="giant" />
       ) : (
-        <List data={bars} renderItem={BarCard} />
+        <List
+          data={bars}
+          renderItem={props => <BarCard {...props} onPress={handleSelect} />}
+        />
       )}
     </Layout>
   )
@@ -204,6 +209,13 @@ const styles = StyleSheet.create({
     paddingVertical: 2,
     paddingHorizontal: 10,
     borderRadius: 50,
+    elevation: 3,
+    shadowOpacity: 0.3,
+    shadowRadius: 3,
+    shadowOffset: {
+      height: 0,
+      width: 0,
+    },
   },
   lightText: {
     color: theme['color-basic-100'],
@@ -217,7 +229,7 @@ const styles = StyleSheet.create({
  *
  *
  ***********************************************************/
-const BarCard = ({item: bar}) => {
+const BarCard = ({item: bar, onPress}) => {
   const {
     hitMetadata: {distance},
   } = bar
@@ -235,14 +247,14 @@ const BarCard = ({item: bar}) => {
   //   "barOpeningHours": "",
   //   "barPhone": "",
   //   "barURL": "",
-  //   "imUrl": "https://firebasestorage.googleapis.com/v0/b/barhopper-269017.appspot.com/o/images%2Fgeneric_bar_01.png?alt=media&token=1f485973-314c-4533-93fe-14f6d91c77fe",
+  //   "imgUrl": "https://firebasestorage.googleapis.com/v0/b/barhopper-269017.appspot.com/o/images%2Fgeneric_bar_01.png?alt=media&token=1f485973-314c-4533-93fe-14f6d91c77fe",
   // }
   return (
-    <TouchableOpacity style={cardStyles.card}>
+    <TouchableOpacity style={cardStyles.card} onPress={() => onPress(bar)}>
       {/* Image */}
       <View style={cardStyles.card}>
         <View>
-          <Image style={cardStyles.image} source={{uri: bar.imUrl}} />
+          <Image style={cardStyles.image} source={{uri: bar.imgUrl}} />
         </View>
         <View stytle={cardStyles.info}>
           {/* Header */}
@@ -250,7 +262,7 @@ const BarCard = ({item: bar}) => {
             <Text category="label" style={{fontWeight: 'bold', fontSize: 12}}>
               {bar.barName}
             </Text>
-            <Text category="label">{distance.toFixed(2)} km</Text>
+            <Text category="label">{distance.toFixed(2)} Mi.</Text>
           </View>
           <View style={cardStyles.redbar}></View>
           {/* Description */}
