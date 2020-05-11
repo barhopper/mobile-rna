@@ -10,7 +10,7 @@ import LinksScreen from '../screens/LinksScreen'
 import Colors from '../constants/Colors'
 
 const BottomTab = createBottomTabNavigator()
-const INITIAL_ROUTE_NAME = 'Home'
+const INITIAL_ROUTE_NAME = 'homeRoot'
 
 export default function BottomTabNavigator({navigation, route}) {
   // Set the header title on the parent stack navigator depending on the
@@ -24,20 +24,20 @@ export default function BottomTabNavigator({navigation, route}) {
       tabBarOptions={{activeTintColor: Colors.tabTextSelected}}
     >
       <BottomTab.Screen
-        name="Home"
         component={HomeStack}
+        name="Home"
         options={{
-          title: 'Home',
           tabBarIcon: ({focused}) => (
             <TabBarIcon focused={focused} name="home" />
           ),
+          headerMode: 'none',
         }}
+        headerMode="none"
       />
       <BottomTab.Screen
         name="Promotions"
         component={LinksScreen}
         options={{
-          title: 'Promotions',
           tabBarIcon: ({focused}) => (
             <TabBarIcon focused={focused} name="flash" />
           ),
@@ -47,7 +47,6 @@ export default function BottomTabNavigator({navigation, route}) {
         name="Favorites"
         component={LinksScreen}
         options={{
-          title: 'Favorites',
           tabBarIcon: ({focused}) => (
             <TabBarIcon focused={focused} name="star" />
           ),
@@ -58,7 +57,6 @@ export default function BottomTabNavigator({navigation, route}) {
         name="Profile"
         component={LogOutScreen}
         options={{
-          title: 'Profile',
           tabBarIcon: ({focused}) => (
             <TabBarIcon focused={focused} name="person" />
           ),
@@ -71,10 +69,11 @@ export default function BottomTabNavigator({navigation, route}) {
 function getHeaderTitle(route) {
   const routeName =
     route.state?.routes[route.state.index]?.name ?? INITIAL_ROUTE_NAME
+  console.log(routeName)
 
   switch (routeName) {
     case 'Home':
-      return 'Home'
+      return 'Search'
     case 'Favorites':
       return 'Favorites'
     case 'Profile':

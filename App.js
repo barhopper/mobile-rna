@@ -9,7 +9,7 @@ import {Ionicons} from '@expo/vector-icons'
 // Navigator
 import {NavigationContainer} from '@react-navigation/native'
 import AuthStack from './navigation/AuthStack'
-import useLinking from './navigation/useLinking'
+// import useLinking from './navigation/useLinking'
 
 // Kitten UI
 import * as eva from '@eva-design/eva'
@@ -31,9 +31,9 @@ androidTimerWorkaround()
 
 export default function App(props) {
   const [isLoadingComplete, setLoadingComplete] = React.useState(false)
-  const [initialNavigationState, setInitialNavigationState] = React.useState()
+  // const [initialNavigationState, setInitialNavigationState] = React.useState()
   const containerRef = React.useRef()
-  const {getInitialState} = useLinking(containerRef)
+  // const {getInitialState} = useLinking(containerRef)
 
   // Load any resources or data that we need prior to rendering the app
   React.useEffect(() => {
@@ -42,7 +42,7 @@ export default function App(props) {
         SplashScreen.preventAutoHide()
 
         // Load our initial navigation state
-        setInitialNavigationState(await getInitialState())
+        // setInitialNavigationState(await getInitialState())
 
         // Load fonts
         await Font.loadAsync({
@@ -84,7 +84,7 @@ export default function App(props) {
                 {Platform.OS === 'ios' && <StatusBar barStyle="default" />}
                 <NavigationContainer
                   ref={containerRef}
-                  initialState={initialNavigationState}
+                  // initialState={initialNavigationState}
                 >
                   <AuthStack />
                 </NavigationContainer>

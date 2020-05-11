@@ -48,6 +48,7 @@ export default function BarListScreen({route, navigation}) {
     navigation.addListener('focus', () => {
       // do something
       subscription.current = watchLocationWithPermission(handleLocationChange)
+      navigation.setOptions({title: 'Listing'})
     })
 
     navigation.addListener('blur', () => {

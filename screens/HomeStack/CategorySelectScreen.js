@@ -1,4 +1,4 @@
-import React, {useState} from 'react'
+import React, {useState, useLayoutEffect} from 'react'
 import {
   StyleSheet,
   View,
@@ -23,6 +23,13 @@ export default function CategorySelectScreen({navigation}) {
   const windowHeight = Dimensions.get('window').height - 130
 
   const [selected, setSelected] = useState(new Set())
+
+  useLayoutEffect(() => {
+    navigation.addListener('focus', () => {
+      // do something
+      navigation.setOptions({title: 'Search'})
+    })
+  }, [navigation])
 
   const handleSelect = item => {
     let temp = new Set(selected.keys())

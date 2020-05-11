@@ -1,4 +1,4 @@
-import {default as React} from 'react'
+import {default as React, useLayoutEffect} from 'react'
 import {
   StyleSheet,
   View,
@@ -40,6 +40,13 @@ export default function BarDetailScreen({route, navigation}) {
 
   // For the carousel we can use this to control what image we're seeing
   // const [bannerImage, setBannerImage] = useState(bar.imgUrl)
+
+  useLayoutEffect(() => {
+    navigation.addListener('focus', () => {
+      // do something
+      navigation.setOptions({title: bar.barName || 'Bar Details'})
+    })
+  }, [navigation, bar])
 
   const leaveReview = () => {
     navigation.navigate('review')
@@ -132,7 +139,7 @@ export default function BarDetailScreen({route, navigation}) {
               )
             })
           ) : (
-            <Text>This bar has no reviews</Text>
+            <NoReviews barName={bar.barName} />
           )}
           {numStars && (
             <View
@@ -220,3 +227,14 @@ const styles = StyleSheet.create({
     elevation: 5,
   },
 })
+
+const NoReviews = ({barName}) => {
+  return (
+    <View style={{justifyContent: 'center', alignItems: 'center', height: 120}}>
+      <Text
+        category="p1"
+        style={{textAlign: 'center'}}
+      >{`${barName} has no reviews.\nYou can be the first!`}</Text>
+    </View>
+  )
+}

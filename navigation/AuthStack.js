@@ -33,17 +33,33 @@ export default function AuthStack() {
     default:
       return (
         <Stack.Navigator
-          screenOptions={{
-            headerTintColor: theme['color-basic-100'],
-            headerStyle: styles.header,
+          screenOptions={({route}) => {
+            const isHidden = route.name === 'root'
+            return {
+              headerTintColor: theme['color-basic-100'],
+              headerStyle: styles.header,
+              headerShown: !isHidden,
+            }
           }}
         >
           {user ? (
-            <Stack.Screen name="root" component={BottomTabNavigator} />
+            <Stack.Screen
+              name="root"
+              headerShown="false"
+              component={BottomTabNavigator}
+            />
           ) : (
             <>
-              <Stack.Screen name="signin" component={SignInScreen} />
-              <Stack.Screen name="signup" component={SignUpScreen} />
+              <Stack.Screen
+                name="signin"
+                options={{title: 'Sign In'}}
+                component={SignInScreen}
+              />
+              <Stack.Screen
+                name="signup"
+                options={{title: 'Sign Up'}}
+                component={SignUpScreen}
+              />
               {/* <Stack.Screen name="Forgot" component={ForgotPassword} /> */}
             </>
           )}

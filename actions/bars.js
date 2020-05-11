@@ -20,7 +20,7 @@ export function getCategories() {
 
 export function searchForBars(_keys, distance, position) {
   // Lets get the users location
-  console.log('Fetching Bars', distance, position)
+  // console.log('Fetching Bars', distance, position)
   if (!distance || !position) {
     return Promise.resolve([])
   }
