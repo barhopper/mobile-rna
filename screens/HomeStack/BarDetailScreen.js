@@ -1,4 +1,4 @@
-import {default as React, useLayoutEffect} from 'react'
+import {default as React, useLayoutEffect, useState, useEffect} from 'react'
 import {
   StyleSheet,
   View,
@@ -6,12 +6,15 @@ import {
   ImageBackground,
   ScrollView,
   FlatList,
+  Linking,
 } from 'react-native'
 import {Layout, Text, Icon, Button} from '@ui-kitten/components'
 
 // import {queryCache} from 'react-query'
+import {imageRef} from '../../services/firebase'
 
 import {default as theme} from '../../constants/Theme'
+import {TouchableOpacity} from 'react-native-gesture-handler'
 
 export default function BarDetailScreen({route, navigation}) {
   const {bar} = route.params || {bar: {hitMetadata: {}}}
@@ -29,6 +32,7 @@ export default function BarDetailScreen({route, navigation}) {
   // })
 
   const {width} = Dimensions.get('window')
+  const fiftyPercent = width / 2
   const infoItemWidth = width / 2 - 30
   const floatingWidth = width - 30
 
@@ -36,10 +40,31 @@ export default function BarDetailScreen({route, navigation}) {
   const reviewTotal =
     reviewValues.reduce((acc, cur) => acc + (cur - 0), 0) - bar.reviews?.count
   const avgReview = reviewTotal > 0 && reviewTotal / (reviewValues.length - 1)
-  const numStars = avgReview && avgReview / 2
+  const numStars = avgReview && Math.floor(avgReview / 2)
+
+  let barHours = 'No Hours'
+  if (bar.barOpeningHours && bar.barClosingHours) {
+    barHours = `${bar.barOpeningHours} - ${bar.barClosingHours}`
+  } else if (bar.barOpeningHours) {
+    barHours = `open from ${bar.barOpeningHours}`
+  } else if (bar.barClosingHours) {
+    barHours = `open until ${bar.barClosingHours}`
+  }
 
   // For the carousel we can use this to control what image we're seeing
-  // const [bannerImage, setBannerImage] = useState(bar.imgUrl)
+  const [bannerImage, setBannerImage] = useState(0)
+  const [carouselImages, setCarouselImages] = useState([bar.imgUrl])
+
+  const rotateRight = () => {
+    setBannerImage(current => (current + 1) % carouselImages.length)
+  }
+
+  const rotateLeft = () => {
+    setBannerImage(current => {
+      let remainder = (current - 1) % carouselImages.length
+      return remainder >= 0 ? remainder : remainder + carouselImages.length
+    })
+  }
 
   useLayoutEffect(() => {
     navigation.addListener('focus', () => {
@@ -48,8 +73,41 @@ export default function BarDetailScreen({route, navigation}) {
     })
   }, [navigation, bar])
 
-  const leaveReview = () => {
-    navigation.navigate('review')
+  useEffect(() => {
+    if (bar.barImages) {
+      let imgUrls = []
+
+      let imgUrlPromises = bar.barImages.map(url => {
+        return imageRef
+          .child(url)
+          .getDownloadURL()
+          .then(res => imgUrls.push(res))
+          .catch(e => console.log('Error: ', e))
+      })
+
+      Promise.all(imgUrlPromises).then(() => {
+        console.log(imgUrls)
+        setCarouselImages(imgUrls)
+      })
+    }
+  }, [bar])
+
+  useEffect(() => {
+    setBannerImage(0)
+  }, [carouselImages])
+
+  const navigateToReview = () => {
+    navigation.navigate('review', {barId: bar.id})
+  }
+
+  const loadInBrowser = url => {
+    let _url = ''
+    if (!url) return
+    _url = typeof url !== 'string' ? url.toString() : url
+    _url = _url.match(/http(s)?:\/\//) ? _url : `https://${_url}`
+    Linking.openURL(`${_url}`).catch(err =>
+      console.error("Couldn't load page", err),
+    )
   }
 
   return (
@@ -59,11 +117,48 @@ export default function BarDetailScreen({route, navigation}) {
         <ImageBackground
           style={styles.bannerImage}
           imageStyle={{resizeMode: 'cover'}}
-          source={{uri: bar.imgUrl}}
+          source={{uri: carouselImages[bannerImage] || bar.imgUrl}}
         >
-          <Text category="h6" style={styles.lightText}>
-            {bar.barName}
-          </Text>
+          <View style={{flexDirection: 'row', flex: 1}}>
+            <TouchableOpacity
+              style={[styles.left, {width: fiftyPercent}]}
+              onPress={rotateLeft}
+            ></TouchableOpacity>
+            <TouchableOpacity
+              style={[styles.left, {width: fiftyPercent}]}
+              onPress={rotateRight}
+            ></TouchableOpacity>
+          </View>
+          <View
+            style={{
+              flexDirection: 'row',
+              justifyContent: 'center',
+              alignItems: 'flex-end',
+            }}
+          >
+            {carouselImages.map((img, index) => {
+              return (
+                <TouchableOpacity
+                  key={img}
+                  style={{
+                    height: 12,
+                    width: 12,
+                    borderRadius: 12,
+                    backgroundColor:
+                      theme[
+                        `${
+                          index === bannerImage
+                            ? 'color-primary-200'
+                            : 'color-basic-100'
+                        }`
+                      ],
+                    marginHorizontal: 8,
+                  }}
+                  onPress={() => setBannerImage(index)}
+                ></TouchableOpacity>
+              )
+            })}
+          </View>
         </ImageBackground>
 
         {/* Info block with quick data points */}
@@ -98,7 +193,7 @@ export default function BarDetailScreen({route, navigation}) {
               fill={theme['color-primary-600']}
               style={styles.infoIcon}
             />
-            <Text>3:00pm - 10:00pm</Text>
+            <Text>{barHours}</Text>
           </View>
           <View style={[styles.infoItem, {width: infoItemWidth}]}>
             <Icon
@@ -114,9 +209,20 @@ export default function BarDetailScreen({route, navigation}) {
               fill={theme['color-primary-600']}
               style={styles.infoIcon}
             />
-            <Text>Daily</Text>
+            <Text>{bar.barOpenDays || 'No Days'}</Text>
           </View>
         </View>
+        {/* Live Stream Button */}
+        {bar.liveUrl && (
+          <Button
+            appearance="ghost"
+            size="small"
+            onPress={() => loadInBrowser(bar.liveUrl || '')}
+            style={{marginHorizontal: 30}}
+          >
+            Watch Live Stream
+          </Button>
+        )}
         {/* Uber Button */}
         {/* Checkin Block */}
         {/* Ratings Block */}
@@ -133,7 +239,7 @@ export default function BarDetailScreen({route, navigation}) {
                   <Text
                     style={{color: theme['color-primary-500'], marginLeft: 8}}
                   >
-                    {item[1]}
+                    {item[1] && Math.round(item[1])}
                   </Text>
                 </View>
               )
@@ -167,9 +273,8 @@ export default function BarDetailScreen({route, navigation}) {
               />
             </View>
           )}
-          <Button onPress={leaveReview}>Leave A Review</Button>
+          <Button onPress={navigateToReview}>Leave A Review</Button>
         </View>
-        {/* Live Stream Button */}
       </ScrollView>
     </Layout>
   )
@@ -203,10 +308,13 @@ const styles = StyleSheet.create({
   },
   button: {},
   bannerImage: {
-    justifyContent: 'flex-end',
-    alignItems: 'flex-start',
-    padding: 16,
+    flex: 1,
     height: 200,
+    paddingBottom: 12,
+  },
+  left: {
+    flex: 1,
+    width: 100,
   },
   infoBlock: {
     flex: 0.3,

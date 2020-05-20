@@ -4,6 +4,7 @@ import * as geofirex from 'geofirex'
 import 'firebase/auth'
 import 'firebase/firestore'
 import 'firebase/storage'
+import 'firebase/functions'
 
 // Initialize Firebase
 const firebaseConfig = {
@@ -27,3 +28,5 @@ export const storage = firebase.storage()
 export const imageRef = storage.ref('images/')
 
 export const geo = geofirex.init(firebase)
+
+export const functions = firebase.functions()

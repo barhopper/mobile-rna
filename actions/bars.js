@@ -1,4 +1,4 @@
-import {firestore, imageRef, geo} from '../services/firebase'
+import {firestore, imageRef, geo, functions} from '../services/firebase'
 import {get} from 'geofirex'
 
 export function getCategories() {
@@ -90,4 +90,7 @@ export function getQuestions() {
   })
 }
 
-export function submitReview() {}
+export function submitReview(reviewData) {
+  const addReview = functions.httpsCallable('addReview')
+  return addReview(reviewData).then(console.log)
+}
