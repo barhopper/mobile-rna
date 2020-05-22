@@ -156,7 +156,7 @@ export default function BarListScreen({route, navigation}) {
         </View>
       </Layout>
       {status === 'loading' ? (
-        <Spinner status="primary" size="giant" />
+        <Spinner status="basic" size="giant" />
       ) : (
         <List
           data={bars}

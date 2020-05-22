@@ -62,9 +62,6 @@ export default function BarReviewScreen({navigation, route}) {
       questions: sQuestions,
     }
 
-    console.log(navigation)
-    // console.log(submission)
-    // console.log(route)
     setIsSubmitting(true)
     submitReview({...submission})
       // eslint-disable-next-line no-unused-vars
@@ -73,9 +70,6 @@ export default function BarReviewScreen({navigation, route}) {
         // TODO: Hook this as an update into reactQuery
       })
       .catch(err => {
-        // TODO: Handle bad review
-        // review already submitted
-        // bad data
         console.log(err)
       })
   }
@@ -104,7 +98,7 @@ export default function BarReviewScreen({navigation, route}) {
           />
           <Button onPress={!isSubmitting && handleAddReview}>
             {isSubmitting ? (
-              <Spinner status="primary" size="small" />
+              <Spinner status="basic" size="small" />
             ) : (
               'Submit Review'
             )}

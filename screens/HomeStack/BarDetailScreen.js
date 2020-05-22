@@ -15,12 +15,19 @@ import {imageRef} from '../../services/firebase'
 
 import {default as theme} from '../../constants/Theme'
 import {TouchableOpacity} from 'react-native-gesture-handler'
+import {useQuery, queryCache} from 'react-query'
+import {getBar} from '../../actions/bars'
 
 export default function BarDetailScreen({route, navigation}) {
-  const {bar} = route.params || {bar: {hitMetadata: {}}}
+  const {bar: _bar} = route.params || {bar: {hitMetadata: {}}}
   const {
     hitMetadata: {distance},
-  } = bar
+  } = _bar
+
+  // eslint-disable-next-line no-unused-vars
+  const {error, status, data: bar} = useQuery(['bar', _bar.id], getBar, {
+    initialData: _bar,
+  })
 
   // const categories = queryCache.getQuery('categories')?.state.data
   // const allCategories = Object.values(categories || {}).reduce(
@@ -70,6 +77,7 @@ export default function BarDetailScreen({route, navigation}) {
     navigation.addListener('focus', () => {
       // do something
       navigation.setOptions({title: bar.barName || 'Bar Details'})
+      queryCache.refetchQueries(['bar', _bar.id])
     })
   }, [navigation, bar])
 
@@ -109,6 +117,8 @@ export default function BarDetailScreen({route, navigation}) {
       console.error("Couldn't load page", err),
     )
   }
+
+  if (status === 'fetching') return null
 
   return (
     <Layout style={styles.container}>
@@ -261,9 +271,8 @@ export default function BarDetailScreen({route, navigation}) {
               </Text>
               <FlatList
                 data={Array(numStars).fill(1)}
-                renderItem={num => (
+                renderItem={() => (
                   <Icon
-                    key={num}
                     name="star"
                     fill={theme['color-primary-600']}
                     style={styles.infoIcon}
