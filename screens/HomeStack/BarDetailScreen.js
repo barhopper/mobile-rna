@@ -19,7 +19,7 @@ import {useQuery, queryCache} from 'react-query'
 import {getBar} from '../../actions/bars'
 
 export default function BarDetailScreen({route, navigation}) {
-  const {bar: _bar} = route.params || {bar: {hitMetadata: {}}}
+  const {bar: _bar} = route.params || {bar: {hitMetadata: {distance: 0}}}
   const {
     hitMetadata: {distance},
   } = _bar

@@ -1,4 +1,4 @@
-import {firestore, imageRef, geo} from '../services/firebase'
+import {firestore, geo} from '../services/firebase'
 import {get} from 'geofirex'
 import moment from 'moment'
 
@@ -31,8 +31,6 @@ export function searchForPromotions(_keys, distance, position, options = {}) {
   position = geo.point(...position)
 
   let timeslot = getCurrentClosestTimeslot(slotModifier)
-
-  console.log(timeslot)
 
   const queryRef = firestore
     .collection('Promotions')

@@ -156,7 +156,9 @@ export default function BarListScreen({route, navigation}) {
         </View>
       </Layout>
       {status === 'loading' ? (
-        <Spinner status="basic" size="giant" />
+        <View style={{flex: 1, alignItems: 'center', justifyContent: 'center'}}>
+          <Spinner size="giant" />
+        </View>
       ) : (
         <List
           data={bars}
@@ -189,6 +191,7 @@ const styles = StyleSheet.create({
   sliderContainer: {
     flexDirection: 'row',
     alignItems: 'center',
+    justifyContent: 'space-evenly',
   },
   tagContainer: {
     flexDirection: 'row',

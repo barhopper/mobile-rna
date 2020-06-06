@@ -2,13 +2,12 @@ import {default as React, useState, useRef, useEffect} from 'react'
 import {
   StyleSheet,
   View,
-  TouchableHighlight,
   TouchableOpacity,
-  Image,
   Slider,
   Dimensions,
+  SectionList,
 } from 'react-native'
-import {Layout, Text, Icon, Spinner, List} from '@ui-kitten/components'
+import {Layout, Text, Spinner} from '@ui-kitten/components'
 
 import {default as theme} from '../constants/Theme'
 import {useQuery} from 'react-query'
@@ -33,14 +32,14 @@ function getTimeStringFromUTCEpoch(seconds) {
   return timeString
 }
 
-export default function PromotionScreen({route, navigation}) {
+export default function PromotionScreen({navigation}) {
   const [distance, setDistance] = useState(3)
   const [searchDistance, setSearchDistance] = useState(3)
 
   // Maybe we can get an initial location on the category scene to kick off
   const [location, setLocation] = useState([0, 0])
 
-  const [allPromotions, setAllPromotions] = useState({})
+  const [allPromotions, setAllPromotions] = useState([])
   const [slotModifier, setSlotModifier] = useState(0)
 
   const subscription = useRef(null)
@@ -51,32 +50,43 @@ export default function PromotionScreen({route, navigation}) {
     searchForPromotions,
   )
 
-  const isLoading = isFetching && Object.keys(allPromotions).length < 1
-
   useEffect(() => {
     navigation.addListener('focus', () => {
       // do something
       subscription.current = watchLocationWithPermission(handleLocationChange)
       navigation.setOptions({title: 'Promotions'})
-      setSlotModifier(0)
     })
 
     navigation.addListener('blur', () => {
       // do something
       subscription.current?.remove?.()
+      setSlotModifier(0)
+      setAllPromotions([])
     })
   }, [navigation])
 
   useEffect(() => {
-    if (Array.isArray(promotions) && promotions.length > 0) {
+    if (Array.isArray(promotions) && promotions.length > 1) {
       let {timeslot} = promotions[0]
 
-      setAllPromotions(current => ({
-        ...current,
-        [timeslot.seconds]: promotions,
-      }))
+      setAllPromotions(current => {
+        // prevent any dups from showing up
+        if (current[current.length - 2]?.title === timeslot.seconds) {
+          return current
+        }
+        return [
+          ...current.slice(0, current.length - 1),
+          {title: timeslot.seconds, data: promotions},
+          {data: ['loading']},
+        ]
+      })
     }
   }, [promotions])
+
+  useEffect(() => {
+    setAllPromotions([])
+    setSlotModifier(0)
+  }, [searchDistance, location])
 
   if (status === 'error') {
     throw error
@@ -129,18 +139,32 @@ export default function PromotionScreen({route, navigation}) {
           <Text category="label">{distance} Mi.</Text>
         </View>
       </Layout>
-      {isLoading ? (
-        <Spinner status="basic" size="giant" />
+      {isFetching && allPromotions.length < 1 ? (
+        <View style={{flex: 1, alignItems: 'center', justifyContent: 'center'}}>
+          <Spinner size="giant" />
+        </View>
       ) : (
-        <List
-          data={promotions}
+        <SectionList
+          sections={allPromotions}
+          keyExtractor={(item, index) => item + index}
           renderItem={props => (
             <PromotionCard
               {...props}
               onPress={handleSelect}
               TouchableOpacityProps={{style: {color: 'red'}}}
+              isFetching={isFetching}
             />
           )}
+          renderSectionHeader={({section: {title}}) => {
+            if (!title) return null
+            return (
+              <InViewPort
+                onChange={() => setSlotModifier(current => current + 1)}
+              >
+                <Text category="h4">{getTimeStringFromUTCEpoch(title)}</Text>
+              </InViewPort>
+            )
+          }}
         />
       )}
     </Layout>
@@ -169,6 +193,7 @@ const styles = StyleSheet.create({
   sliderContainer: {
     flexDirection: 'row',
     alignItems: 'center',
+    justifyContent: 'space-evenly',
   },
   tagContainer: {
     flexDirection: 'row',
@@ -193,10 +218,14 @@ const styles = StyleSheet.create({
  *
  *
  ***********************************************************/
-const PromotionCard = ({item: promotion, onPress}) => {
+const PromotionCard = ({item: promotion, onPress, isFetching}) => {
+  if (typeof promotion === 'string' && promotion === 'loading') {
+    return isFetching && <Spinner size="giant" />
+  }
+
   const {
     hitMetadata: {distance},
-  } = promotion
+  } = promotion || {hitMetadata: {distance: 0}}
   const bar = {
     id: promotion.barId,
     barName: promotion.barName,
@@ -206,7 +235,7 @@ const PromotionCard = ({item: promotion, onPress}) => {
   const infoWidth = width - 60
 
   return (
-    <View style={cardStyles.card} onPress={() => onPress(bar)}>
+    <TouchableOpacity style={cardStyles.card} onPress={() => onPress(bar)}>
       <Text
         category="p2"
         appearance="hint"
@@ -223,7 +252,7 @@ const PromotionCard = ({item: promotion, onPress}) => {
       </View>
       <View style={cardStyles.redbar}></View>
       {/* Description */}
-    </View>
+    </TouchableOpacity>
   )
 }
 const cardStyles = StyleSheet.create({
@@ -261,3 +290,67 @@ const cardStyles = StyleSheet.create({
     color: theme['color-basic-100'],
   },
 })
+
+function InViewPort(props) {
+  const [rTop, setRTop] = useState(0)
+  const [rBottom, setRBottom] = useState(0)
+  const [rWidth, setRWidth] = useState(0)
+
+  const interval = useRef(null)
+  const myView = useRef(null)
+
+  useEffect(() => {
+    startWatching()
+    return stopWatching
+  }, [])
+
+  useEffect(() => {
+    isInViewPort()
+  }, [rTop, rBottom, rWidth])
+
+  const startWatching = () => {
+    if (interval.current) {
+      return
+    }
+    interval.current = setInterval(() => {
+      if (!myView.current) {
+        return
+      }
+      myView.current.measure((x, y, width, height, pageX, pageY) => {
+        setRTop(pageY)
+        setRBottom(pageY + height)
+        setRWidth(pageX + width)
+      })
+    }, props.delay || 100)
+  }
+
+  const stopWatching = () => {
+    interval.current = clearInterval(interval.current)
+  }
+
+  const isInViewPort = () => {
+    const window = Dimensions.get('window')
+    const isVisible =
+      rBottom != 0 &&
+      rTop >= 0 &&
+      rBottom <= window.height &&
+      rWidth > 0 &&
+      rWidth <= window.width
+    if (isVisible) {
+      props.onChange(isVisible)
+      stopWatching()
+    }
+  }
+
+  return (
+    <View
+      collapsable={false}
+      ref={component => {
+        myView.current = component
+      }}
+      {...props}
+    >
+      {props.children}
+    </View>
+  )
+}
