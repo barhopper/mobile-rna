@@ -32,9 +32,9 @@ async function addPromotions() {
     debug('******************* PROMOTIONS **********************')
     let numPromotions = Math.round(Math.random() * 10)
     for (let i = 0; i < numPromotions; i++) {
-      let promo = generatePromotion(bar)
-      debug(promo)
-      promotions.push(promo)
+      let promos = generatePromotion(bar)
+      debug(promos)
+      promotions.push(...promos)
     }
   })
 
@@ -50,8 +50,7 @@ async function addPromotions() {
 }
 
 function generatePromotion(bar) {
-  let currentTime = Date.now()
-  let fakeCurrentTime = moment(currentTime)
+  let fakeCurrentTime = getCurrentClosestTimeslot()
     .add(...getRandomTime({withNeg: true}))
     .toDate()
 
@@ -59,18 +58,44 @@ function generatePromotion(bar) {
     .add(...getRandomTime({withNeg: true}))
     .toDate()
 
-  const promotion = {
-    position: bar.position,
-    barName: bar.barName,
-    barId: bar.id,
-    postedTime: timePosted,
-    expires: moment(timePosted)
-      .add(...getRandomTime())
-      .toDate(),
-    text: `Issa promotion we're giving out free ${faker.random.word()} if your name is ${faker.name.firstName()}`,
+  let slots = []
+
+  let activeSlots = getRandomTime()[0] / 30
+  let word = faker.random.word()
+  let name = faker.name.firstName()
+  let promoId = generateId()
+
+  for (let i = 0; i < activeSlots; i++) {
+    const promotion = {
+      position: bar.position,
+      barName: bar.barName,
+      barId: bar.id,
+      timeslot: moment(timePosted)
+        .add(i * 30, 'm')
+        .toDate(),
+      text: `Issa promotion we're giving out free ${word} if your name is ${name}`,
+      promoId,
+    }
+
+    slots.push(promotion)
   }
 
-  return promotion
+  return slots
+}
+
+function getCurrentClosestTimeslot() {
+  const time = moment(Date.now())
+  let mins = time.minutes()
+
+  if (mins - 30 > 0) {
+    time.minutes(30)
+  } else {
+    time.minutes(0)
+  }
+
+  time.seconds(0)
+  time.milliseconds(0)
+  return time
 }
 
 function getRandomTime(options = {withNeg: false}) {
@@ -80,9 +105,7 @@ function getRandomTime(options = {withNeg: false}) {
   let neg = false
 
   let res = [60, 'm']
-  if (num < 10) {
-    res = [10, 'm']
-  } else if (num < 20) {
+  if (num < 20) {
     res = [30, 'm']
   } else if (num < 40) {
     res = [60, 'm']
@@ -99,6 +122,17 @@ function getRandomTime(options = {withNeg: false}) {
   if (withNeg) neg = Math.random() > 0.5 ? true : false
   if (neg) res[0] = 0 - res[0]
   return res
+}
+
+// This is a copy o the id generation function from the firestore source
+const generateId = () => {
+  // Alphanumeric characters
+  const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789'
+  let autoId = ''
+  for (let i = 0; i < 20; i++) {
+    autoId += chars.charAt(Math.floor(Math.random() * chars.length))
+  }
+  return autoId
 }
 
 addPromotions()

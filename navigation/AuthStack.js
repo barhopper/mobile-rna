@@ -34,11 +34,9 @@ export default function AuthStack() {
       return (
         <Stack.Navigator
           screenOptions={({route}) => {
-            const isHidden = route.name === 'root'
             return {
               headerTintColor: theme['color-basic-100'],
               headerStyle: styles.header,
-              headerShown: !isHidden,
             }
           }}
         >

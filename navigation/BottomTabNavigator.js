@@ -4,6 +4,7 @@ import {createBottomTabNavigator} from '@react-navigation/bottom-tabs'
 import TabBarIcon from '../components/TabBarIcon'
 
 import {default as HomeStack} from './HomeStack'
+import {default as PromotionScreen} from '../screens/PromotionsScreen'
 import LogOutScreen from '../screens/LogOutScreen'
 import LinksScreen from '../screens/LinksScreen'
 
@@ -16,7 +17,10 @@ export default function BottomTabNavigator({navigation, route}) {
   // Set the header title on the parent stack navigator depending on the
   // currently active tab. Learn more in the documentation:
   // https://reactnavigation.org/docs/en/screen-options-resolution.html
-  navigation.setOptions({headerTitle: getHeaderTitle(route)})
+  navigation.setOptions({
+    headerTitle: getHeaderTitle(route),
+    headerShown: getHeaderMode(route),
+  })
 
   return (
     <BottomTab.Navigator
@@ -30,13 +34,11 @@ export default function BottomTabNavigator({navigation, route}) {
           tabBarIcon: ({focused}) => (
             <TabBarIcon focused={focused} name="home" />
           ),
-          headerMode: 'none',
         }}
-        headerMode="none"
       />
       <BottomTab.Screen
         name="Promotions"
-        component={LinksScreen}
+        component={PromotionScreen}
         options={{
           tabBarIcon: ({focused}) => (
             <TabBarIcon focused={focused} name="flash" />
@@ -80,5 +82,19 @@ function getHeaderTitle(route) {
       return 'Profile'
     case 'Promotions':
       return 'Promotions'
+  }
+}
+
+function getHeaderMode(route) {
+  const routeName =
+    route.state?.routes[route.state.index]?.name ?? INITIAL_ROUTE_NAME
+
+  switch (routeName) {
+    case 'Favorites':
+    case 'Profile':
+    case 'Promotions':
+      return true
+    default:
+      return false
   }
 }
