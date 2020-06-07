@@ -7,7 +7,7 @@ import {
   Dimensions,
   SectionList,
 } from 'react-native'
-import {Layout, Text, Spinner} from '@ui-kitten/components'
+import {Layout, Text, Spinner, Button} from '@ui-kitten/components'
 
 import {default as theme} from '../constants/Theme'
 import {useQuery} from 'react-query'
@@ -41,6 +41,8 @@ export default function PromotionScreen({navigation}) {
 
   const [allPromotions, setAllPromotions] = useState([])
   const [slotModifier, setSlotModifier] = useState(0)
+
+  const [emptySlots, setEmptySlots] = useState(0)
 
   const subscription = useRef(null)
 
@@ -80,6 +82,12 @@ export default function PromotionScreen({navigation}) {
           {data: ['loading']},
         ]
       })
+      if (emptySlots > 0) {
+        setEmptySlots(0)
+      }
+    } else if (Array.isArray(promotions) && emptySlots < 10) {
+      setEmptySlots(current => current + 1)
+      setSlotModifier(current => current + 1)
     }
   }, [promotions])
 
@@ -115,6 +123,11 @@ export default function PromotionScreen({navigation}) {
     }
   }
 
+  const resumeSearch = () => {
+    setEmptySlots(0)
+    setSlotModifier(current => current + 1)
+  }
+
   const handleSelect = bar => {
     navigation.navigate('details', {bar})
   }
@@ -136,7 +149,9 @@ export default function PromotionScreen({navigation}) {
             onValueChange={setDistance}
             onSlidingComplete={setSearchDistance}
           />
-          <Text category="label">{distance} Mi.</Text>
+          <Text category="label" style={{width: 45}}>
+            {distance} Mi.
+          </Text>
         </View>
       </Layout>
       {isFetching && allPromotions.length < 1 ? (
@@ -150,9 +165,10 @@ export default function PromotionScreen({navigation}) {
           renderItem={props => (
             <PromotionCard
               {...props}
-              onPress={handleSelect}
+              onPress={emptySlots === 10 ? resumeSearch : handleSelect}
               TouchableOpacityProps={{style: {color: 'red'}}}
               isFetching={isFetching}
+              maxAutoFetch={emptySlots === 10}
             />
           )}
           renderSectionHeader={({section: {title}}) => {
@@ -218,9 +234,26 @@ const styles = StyleSheet.create({
  *
  *
  ***********************************************************/
-const PromotionCard = ({item: promotion, onPress, isFetching}) => {
+const PromotionCard = ({
+  item: promotion,
+  onPress,
+  isFetching,
+  maxAutoFetch,
+}) => {
   if (typeof promotion === 'string' && promotion === 'loading') {
-    return isFetching && <Spinner size="giant" />
+    if (isFetching) {
+      return <Spinner size="giant" />
+    }
+
+    if (maxAutoFetch) {
+      return (
+        <Button appearance="ghost" onPress={onPress}>
+          Keep Searching
+        </Button>
+      )
+    }
+
+    return null
   }
 
   const {
@@ -229,6 +262,7 @@ const PromotionCard = ({item: promotion, onPress, isFetching}) => {
   const bar = {
     id: promotion.barId,
     barName: promotion.barName,
+    hitMetadata: {distance},
   }
 
   const {width} = Dimensions.get('window')
