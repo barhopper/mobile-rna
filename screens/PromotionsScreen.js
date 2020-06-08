@@ -161,7 +161,7 @@ export default function PromotionScreen({navigation}) {
       ) : (
         <SectionList
           sections={allPromotions}
-          keyExtractor={(item, index) => item + index}
+          keyExtractor={(item, index) => item?.id + index}
           renderItem={props => (
             <PromotionCard
               {...props}

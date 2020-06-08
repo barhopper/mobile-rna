@@ -8,7 +8,7 @@ import {
   FlatList,
   Linking,
 } from 'react-native'
-import {Layout, Text, Icon, Button} from '@ui-kitten/components'
+import {Layout, Text, Icon, Button, Spinner} from '@ui-kitten/components'
 
 // import {queryCache} from 'react-query'
 import {imageRef} from '../../services/firebase'
@@ -25,9 +25,13 @@ export default function BarDetailScreen({route, navigation}) {
   } = _bar
 
   // eslint-disable-next-line no-unused-vars
-  const {error, status, data: bar} = useQuery(['bar', _bar.id], getBar, {
-    initialData: _bar,
-  })
+  const {error, status, data: bar, isFetching} = useQuery(
+    ['bar', _bar.id],
+    getBar,
+    {
+      initialData: _bar,
+    },
+  )
 
   // const categories = queryCache.getQuery('categories')?.state.data
   // const allCategories = Object.values(categories || {}).reduce(
@@ -59,15 +63,19 @@ export default function BarDetailScreen({route, navigation}) {
   }
 
   // For the carousel we can use this to control what image we're seeing
-  const [bannerImage, setBannerImage] = useState(0)
-  const [carouselImages, setCarouselImages] = useState([bar.imgUrl])
+  const [activeImageIndex, setActiveImageIndex] = useState(0)
+  const [carouselImages, setCarouselImages] = useState(
+    bar.imgUrl ? [bar.imgUrl] : [],
+  )
+
+  const showLoader = isFetching && !bar.imgUrl && !bar.barImages
 
   const rotateRight = () => {
-    setBannerImage(current => (current + 1) % carouselImages.length)
+    setActiveImageIndex(current => (current + 1) % carouselImages.length)
   }
 
   const rotateLeft = () => {
-    setBannerImage(current => {
+    setActiveImageIndex(current => {
       let remainder = (current - 1) % carouselImages.length
       return remainder >= 0 ? remainder : remainder + carouselImages.length
     })
@@ -77,12 +85,13 @@ export default function BarDetailScreen({route, navigation}) {
     navigation.addListener('focus', () => {
       // do something
       navigation.setOptions({title: bar.barName || 'Bar Details'})
-      queryCache.refetchQueries(['bar', _bar.id])
+
+      if (!isFetching) queryCache.refetchQueries(['bar', _bar.id])
     })
   }, [navigation, bar])
 
   useEffect(() => {
-    if (bar.barImages) {
+    if (bar.barImages && carouselImages.length !== bar.barImages.length) {
       let imgUrls = []
 
       let imgUrlPromises = bar.barImages.map(url => {
@@ -94,14 +103,18 @@ export default function BarDetailScreen({route, navigation}) {
       })
 
       Promise.all(imgUrlPromises).then(() => {
-        console.log(imgUrls)
+        // console.log(imgUrls)
         setCarouselImages(imgUrls)
       })
+    } else if (!bar.imgUrl) {
+      // we can assume if we dont have an imgURl we need to fetch the bar
+      if (!isFetching)
+        queryCache.refetchQueries(['bar', _bar.id], {force: true})
     }
   }, [bar])
 
   useEffect(() => {
-    setBannerImage(0)
+    setActiveImageIndex(0)
   }, [carouselImages])
 
   const navigateToReview = () => {
@@ -118,7 +131,7 @@ export default function BarDetailScreen({route, navigation}) {
     )
   }
 
-  if (status === 'fetching') return null
+  if (status === 'error') return null
 
   return (
     <Layout style={styles.container}>
@@ -127,7 +140,7 @@ export default function BarDetailScreen({route, navigation}) {
         <ImageBackground
           style={styles.bannerImage}
           imageStyle={{resizeMode: 'cover'}}
-          source={{uri: carouselImages[bannerImage] || bar.imgUrl}}
+          source={{uri: carouselImages[activeImageIndex] || bar.imgUrl || null}}
         >
           <View style={{flexDirection: 'row', flex: 1}}>
             <TouchableOpacity
@@ -146,28 +159,32 @@ export default function BarDetailScreen({route, navigation}) {
               alignItems: 'flex-end',
             }}
           >
-            {carouselImages.map((img, index) => {
-              return (
-                <TouchableOpacity
-                  key={img}
-                  style={{
-                    height: 12,
-                    width: 12,
-                    borderRadius: 12,
-                    backgroundColor:
-                      theme[
-                        `${
-                          index === bannerImage
-                            ? 'color-primary-200'
-                            : 'color-basic-100'
-                        }`
-                      ],
-                    marginHorizontal: 8,
-                  }}
-                  onPress={() => setBannerImage(index)}
-                ></TouchableOpacity>
-              )
-            })}
+            {!showLoader ? (
+              carouselImages.map((img, index) => {
+                return (
+                  <TouchableOpacity
+                    key={img}
+                    style={{
+                      height: 12,
+                      width: 12,
+                      borderRadius: 12,
+                      backgroundColor:
+                        theme[
+                          `${
+                            index === activeImageIndex
+                              ? 'color-primary-200'
+                              : 'color-basic-100'
+                          }`
+                        ],
+                      marginHorizontal: 8,
+                    }}
+                    onPress={() => setActiveImageIndex(index)}
+                  ></TouchableOpacity>
+                )
+              })
+            ) : (
+              <Spinner size="giant" />
+            )}
           </View>
         </ImageBackground>
 
@@ -241,7 +258,7 @@ export default function BarDetailScreen({route, navigation}) {
             Object.entries(bar.reviews || {}).map(item => {
               if (item[0] === 'count') return null
               return (
-                <View key={item[0]} style={{flexDirection: 'row', flex: 0.5}}>
+                <View key={item} style={{flexDirection: 'row', flex: 0.5}}>
                   <Text category="p1" style={{fontWeight: 'bold'}}>
                     {item[0]?.slice(0, 1).toUpperCase()}
                     {item[0]?.slice(1, item[0].length)}:
@@ -271,8 +288,9 @@ export default function BarDetailScreen({route, navigation}) {
               </Text>
               <FlatList
                 data={Array(numStars).fill(1)}
-                renderItem={() => (
+                renderItem={(_item, index) => (
                   <Icon
+                    key={_item + '' + index}
                     name="star"
                     fill={theme['color-primary-600']}
                     style={styles.infoIcon}
