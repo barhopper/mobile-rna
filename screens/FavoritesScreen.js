@@ -41,7 +41,7 @@ export default function FavoriteListScreen({navigation}) {
   }
 
   const handleSelect = favorite => {
-    let bar = favorite
+    let bar = {...favorite}
     bar.id = bar.barId
     bar.fromFav = true
     navigation.navigate('details', {bar})
