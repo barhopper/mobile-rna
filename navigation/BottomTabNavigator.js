@@ -5,8 +5,12 @@ import TabBarIcon from '../components/TabBarIcon'
 
 import {default as HomeStack} from './HomeStack'
 import {default as PromotionScreen} from '../screens/PromotionsScreen'
+import {default as FavoritesScreen} from '../screens/FavoritesScreen'
 import LogOutScreen from '../screens/LogOutScreen'
-import LinksScreen from '../screens/LinksScreen'
+
+import {getFavorites} from '../actions/favorites'
+import {queryCache} from 'react-query'
+import {useUser} from '../contexts/userContext'
 
 import Colors from '../constants/Colors'
 
@@ -21,6 +25,12 @@ export default function BottomTabNavigator({navigation, route}) {
     headerTitle: getHeaderTitle(route),
     headerShown: getHeaderMode(route),
   })
+
+  const user = useUser()
+  React.useEffect(() => {
+    user?.user?.uid &&
+      queryCache.prefetchQuery(['favorites', user.user.uid], getFavorites)
+  }, [user])
 
   return (
     <BottomTab.Navigator
@@ -47,7 +57,7 @@ export default function BottomTabNavigator({navigation, route}) {
       />
       <BottomTab.Screen
         name="Favorites"
-        component={LinksScreen}
+        component={FavoritesScreen}
         options={{
           tabBarIcon: ({focused}) => (
             <TabBarIcon focused={focused} name="star" />
@@ -71,7 +81,6 @@ export default function BottomTabNavigator({navigation, route}) {
 function getHeaderTitle(route) {
   const routeName =
     route.state?.routes[route.state.index]?.name ?? INITIAL_ROUTE_NAME
-  // console.log(routeName)
 
   switch (routeName) {
     case 'Home':

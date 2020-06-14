@@ -15,14 +15,16 @@ import {imageRef} from '../../services/firebase'
 
 import {default as theme} from '../../constants/Theme'
 import {TouchableOpacity} from 'react-native-gesture-handler'
-import {useQuery, queryCache} from 'react-query'
+import {useQuery, queryCache, useMutation} from 'react-query'
 import {getBar} from '../../actions/bars'
+import {toggleFavorite} from '../../actions/favorites'
+import {useUser} from '../../contexts/userContext'
 
 export default function BarDetailScreen({route, navigation}) {
   const {bar: _bar} = route.params || {bar: {hitMetadata: {distance: 0}}}
   const {
     hitMetadata: {distance},
-  } = _bar
+  } = _bar?.hitMetadata ? _bar : {hitMetadata: {distance: 0}}
 
   // eslint-disable-next-line no-unused-vars
   const {error, status, data: bar, isFetching} = useQuery(
@@ -33,14 +35,8 @@ export default function BarDetailScreen({route, navigation}) {
     },
   )
 
-  // const categories = queryCache.getQuery('categories')?.state.data
-  // const allCategories = Object.values(categories || {}).reduce(
-  //   (acc, cur) => acc.concat(cur),
-  //   [],
-  // )
-  // const barCategories = allCategories?.filter(cat => {
-  //   return bar[cat]
-  // })
+  const user = useUser()
+  const userId = user?.user?.uid
 
   const {width} = Dimensions.get('window')
   const fiftyPercent = width / 2
@@ -52,6 +48,9 @@ export default function BarDetailScreen({route, navigation}) {
     reviewValues.reduce((acc, cur) => acc + (cur - 0), 0) - bar.reviews?.count
   const avgReview = reviewTotal > 0 && reviewTotal / (reviewValues.length - 1)
   const numStars = avgReview && Math.floor(avgReview / 2)
+
+  const favorites = queryCache.getQueryData(['favorites', userId])
+  const favRecord = bar ? favorites[bar.id] : false
 
   let barHours = 'No Hours'
   if (bar.barOpeningHours && bar.barClosingHours) {
@@ -70,6 +69,82 @@ export default function BarDetailScreen({route, navigation}) {
 
   const showLoader = isFetching && !bar.imgUrl && !bar.barImages
 
+  const [mutateFavorites] = useMutation(
+    ({userId, bar, favRecord}) => toggleFavorite(userId, bar, favRecord),
+    {
+      // Optimistically update the cache value on mutate, but store
+      // the old value and return it so that it's accessible in case of
+      // an error
+      onMutate: ({userId, bar, favRecord}) => {
+        if (!bar || !userId) return
+        const {id: barId, position, barName, barCoverImage, imgUrl} = bar
+        const favorite = {
+          barId,
+          position,
+          barName,
+          barCoverImage,
+          imgUrl,
+          userId,
+        }
+
+        queryCache.cancelQueries(['favorites', userId])
+
+        const previousValue = queryCache.getQueryData(['favorites', userId])
+
+        queryCache.setQueryData(['favorites', userId], old => {
+          // if the record exits this creates the same obj
+          let tempFavs = {...old, [favorite.barId]: favorite}
+          if (favRecord) delete tempFavs[favorite.barId]
+          return tempFavs
+        })
+
+        return previousValue
+      },
+
+      // On failure, roll back to the previous value
+      onError: (err, {userId}, previousValue) => {
+        return previousValue
+          ? queryCache.setQueryData(['favorites', userId], previousValue)
+          : null
+      },
+
+      onSuccess: async (response, {userId, bar, favRecord}) => {
+        let newFav = null
+        if (!favRecord) {
+          const favRes = await response.get()
+          newFav = favRes.data()
+          newFav.id = favRes.id
+        }
+        navigation.setOptions({
+          headerRight: () => {
+            return (
+              <TouchableOpacity
+                onPress={() =>
+                  mutateFavorites({userId, bar, favRecord: newFav})
+                }
+              >
+                <Icon
+                  name={`${!favRecord ? 'star' : 'star-outline'}`}
+                  fill={
+                    !favRecord
+                      ? theme['color-basic-100']
+                      : theme['color-primary-300']
+                  }
+                  style={[
+                    styles.infoIcon,
+                    {height: 32, width: 32, marginRight: 16},
+                  ]}
+                />
+              </TouchableOpacity>
+            )
+          },
+        })
+      },
+      // After success or failure, refetch the favorites query
+      onSettled: () => queryCache.refetchQueries(['favorites', userId]),
+    },
+  )
+
   const rotateRight = () => {
     setActiveImageIndex(current => (current + 1) % carouselImages.length)
   }
@@ -84,11 +159,31 @@ export default function BarDetailScreen({route, navigation}) {
   useLayoutEffect(() => {
     navigation.addListener('focus', () => {
       // do something
-      navigation.setOptions({title: bar.barName || 'Bar Details'})
+      navigation.setOptions({
+        title: bar.barName || 'Bar Details',
+        headerRight: () => (
+          <TouchableOpacity
+            onPress={() => mutateFavorites({userId, bar, favRecord})}
+          >
+            <Icon
+              name={`${favRecord ? 'star' : 'star-outline'}`}
+              fill={
+                favRecord
+                  ? theme['color-basic-100']
+                  : theme['color-primary-300']
+              }
+              style={[
+                styles.infoIcon,
+                {height: 32, width: 32, marginRight: 16},
+              ]}
+            />
+          </TouchableOpacity>
+        ),
+      })
 
       if (!isFetching) queryCache.refetchQueries(['bar', _bar.id])
     })
-  }, [navigation, bar])
+  }, [navigation, bar, userId, favorites])
 
   useEffect(() => {
     if (bar.barImages && carouselImages.length !== bar.barImages.length) {
@@ -103,10 +198,9 @@ export default function BarDetailScreen({route, navigation}) {
       })
 
       Promise.all(imgUrlPromises).then(() => {
-        // console.log(imgUrls)
         setCarouselImages(imgUrls)
       })
-    } else if (!bar.imgUrl) {
+    } else if (!bar.imgUrl || bar.fromFav) {
       // we can assume if we dont have an imgURl we need to fetch the bar
       if (!isFetching)
         queryCache.refetchQueries(['bar', _bar.id], {force: true})

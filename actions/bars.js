@@ -73,7 +73,6 @@ export function searchForBars(_keys, distance, position) {
 }
 
 export async function getBar(_key, barId) {
-  // console.log('Trying to fetch Bar')
   try {
     const barSnapshot = await firestore.collection('Bars').doc(barId).get()
 
@@ -90,13 +89,12 @@ export async function getBar(_key, barId) {
       }
 
       barData.imgUrl = imgPromise
-      // console.log('Fetched new bar')
+      barData.id = barId
       return Promise.resolve(barData)
     }
 
     throw new Error('Bar does not exist')
   } catch (e) {
-    // console.log('Error Fetching new Bar:', e)
     return Promise.reject(e)
   }
 }
