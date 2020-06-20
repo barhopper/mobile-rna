@@ -3,7 +3,8 @@ import {StyleSheet, View, Image, Dimensions} from 'react-native'
 import {Layout, Text, Button} from '@ui-kitten/components'
 
 import {PasswordChangeModal} from './ProfileScreens/PasswordChangeModal'
-// import {UpdateImageModal} from './ProfileScreens/UpdateImageModal'
+import {LinkAccountModal} from './ProfileScreens/LinkAccountModal'
+import {UpdateImageModal} from './ProfileScreens/UpdateImageModal'
 import {CopyModal} from './ProfileScreens/CopyModal'
 
 import {signOut} from '../actions/auth'
@@ -14,16 +15,16 @@ export default function ProfileScreen() {
   const {width} = Dimensions.get('window')
 
   const updateUser = useUpdateUser()
-  const token = useUser()
+  const user = useUser()
 
-  const isAnonymous = token?.user?.isAnonymous
-  const email = isAnonymous ? null : token?.user?.email
+  const isAnonymous = user?.isAnonymous
+  const email = isAnonymous ? null : user?.email
 
   let profileWidth = width - width * 0.2 // 10 % padding minimum
   profileWidth = profileWidth > 200 ? 200 : profileWidth
 
   const profileRadius = profileWidth / 2
-  const userImg = isAnonymous ? null : token?.user?.photoUrl
+  const userImg = isAnonymous ? null : user?.photoUrl
   const userImageStyle = {
     width: profileWidth,
     height: profileWidth,
@@ -50,10 +51,10 @@ export default function ProfileScreen() {
       <View style={styles.profileMain}>
         {/* if signed in */}
         <ProfileImage style={userImageStyle} />
-        {/* <UpdateImageModal /> */}
+        {!isAnonymous && <UpdateImageModal />}
 
         {isAnonymous ? (
-          <Button style={{width: width - 30}}>Create an Account</Button>
+          <LinkAccountModal buttonStyle={{width: width - 30}} />
         ) : (
           <Text category="h5" style={styles.profileText}>
             {email}

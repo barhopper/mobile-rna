@@ -25,7 +25,7 @@ import {useUser} from '../contexts/userContext'
 export default function FavoriteListScreen({navigation}) {
   const user = useUser()
   const {error, status, data: favorites} = useQuery(
-    ['favorites', user?.user?.uid],
+    ['favorites', user?.uid],
     getFavorites,
   )
 

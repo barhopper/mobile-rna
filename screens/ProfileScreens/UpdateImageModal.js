@@ -4,7 +4,7 @@ import {Button, Layout, Modal} from '@ui-kitten/components'
 import {default as ImagePicker} from 'expo-image-picker'
 import Constants from 'expo-constants'
 
-export default function UpdateImageModal() {
+export function UpdateImageModal() {
   const [image, setImage] = useState(null)
   const [isModalOpen, setIsModalOpen] = useState(false)
   const toggleModal = () => setIsModalOpen(current => !current)
@@ -52,7 +52,7 @@ export default function UpdateImageModal() {
           {image && (
             <Image source={{uri: image}} style={{width: 200, height: 200}} />
           )}
-          <Button title="Pick an image from camera roll" onPress={pickImage} />
+          <Button onPress={pickImage}>Pick an image from camera roll</Button>
         </Layout>
       </Modal>
     </>

@@ -27,7 +27,6 @@ export function toggleFavorite(userId, bar, favoriteRecord) {
     return Promise.reject(`Invalid ${userId ? 'bar' : 'user'} id`)
   }
 
-  console.log({favoriteRecord})
   if (favoriteRecord) {
     return new Promise((resolve, reject) => {
       // this resolves a document reference that we can then .get()

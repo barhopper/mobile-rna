@@ -28,8 +28,7 @@ export default function BottomTabNavigator({navigation, route}) {
 
   const user = useUser()
   React.useEffect(() => {
-    user?.user?.uid &&
-      queryCache.prefetchQuery(['favorites', user.user.uid], getFavorites)
+    user?.uid && queryCache.prefetchQuery(['favorites', user.uid], getFavorites)
   }, [user])
 
   return (

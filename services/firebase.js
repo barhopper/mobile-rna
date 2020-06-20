@@ -30,3 +30,5 @@ export const imageRef = storage.ref('images/')
 export const geo = geofirex.init(firebase)
 
 export const functions = firebase.functions()
+
+export const EmailAuthProvider = firebase.auth.EmailAuthProvider

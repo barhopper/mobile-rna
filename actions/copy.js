@@ -8,7 +8,6 @@ export function getTerms() {
       .doc('terms')
       .get()
       .then(snapshot => {
-        console.log(snapshot)
         resolve(snapshot.data())
       })
       .catch(reject)
@@ -33,7 +32,6 @@ export function getAbout() {
       .doc('about')
       .get()
       .then(snapshot => {
-        console.log(snapshot)
         resolve(snapshot.data())
       })
       .catch(reject)

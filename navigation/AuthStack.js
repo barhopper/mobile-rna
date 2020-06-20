@@ -11,6 +11,7 @@ import {default as BottomTabNavigator} from '../navigation/BottomTabNavigator'
 import {useUser, useUpdateUser} from '../contexts/userContext'
 
 import {default as theme} from '../constants/Theme'
+import {auth} from '../services/firebase'
 
 const getCurrentUserFromStorage = () => Promise.resolve(null)
 
@@ -20,6 +21,12 @@ export default function AuthStack() {
   const {data, status, error} = useQuery('user', getCurrentUserFromStorage)
   const user = useUser()
   const updateUser = useUpdateUser()
+
+  useEffect(() => {
+    auth.onAuthStateChanged(user => {
+      updateUser(user)
+    })
+  }, [])
 
   useEffect(() => {
     updateUser(data)
@@ -33,7 +40,7 @@ export default function AuthStack() {
     default:
       return (
         <Stack.Navigator
-          screenOptions={({route}) => {
+          screenOptions={() => {
             return {
               headerTintColor: theme['color-basic-100'],
               headerStyle: styles.header,

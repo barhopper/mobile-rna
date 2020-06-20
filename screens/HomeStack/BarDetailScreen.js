@@ -7,6 +7,7 @@ import {
   ScrollView,
   FlatList,
   Linking,
+  Alert,
 } from 'react-native'
 import {Layout, Text, Icon, Button, Spinner} from '@ui-kitten/components'
 
@@ -36,7 +37,7 @@ export default function BarDetailScreen({route, navigation}) {
   )
 
   const user = useUser()
-  const userId = user?.user?.uid
+  const userId = user?.uid
 
   const {width} = Dimensions.get('window')
   const fiftyPercent = width / 2
@@ -120,7 +121,7 @@ export default function BarDetailScreen({route, navigation}) {
             return (
               <TouchableOpacity
                 onPress={() =>
-                  mutateFavorites({userId, bar, favRecord: newFav})
+                  handleFavoritePress({userId, bar, favRecord: newFav})
                 }
               >
                 <Icon
@@ -145,6 +146,17 @@ export default function BarDetailScreen({route, navigation}) {
     },
   )
 
+  const handleFavoritePress = args => {
+    if (user.isAnonymous) {
+      Alert.alert('Sorry', 'You must create an account to add Favorites', [
+        {text: 'Create Account', onPress: () => navigation.navigate('Profile')},
+        {text: 'Cancel', onPress: () => {}},
+      ])
+      return
+    }
+    mutateFavorites(args)
+  }
+
   const rotateRight = () => {
     setActiveImageIndex(current => (current + 1) % carouselImages.length)
   }
@@ -163,7 +175,7 @@ export default function BarDetailScreen({route, navigation}) {
         title: bar.barName || 'Bar Details',
         headerRight: () => (
           <TouchableOpacity
-            onPress={() => mutateFavorites({userId, bar, favRecord})}
+            onPress={() => handleFavoritePress({userId, bar, favRecord})}
           >
             <Icon
               name={`${favRecord ? 'star' : 'star-outline'}`}

@@ -3,7 +3,7 @@
  * Everything im here should return a promise to be used by react-query
  */
 import {AsyncStorage} from 'react-native'
-import {auth} from '../services/firebase'
+import {auth, EmailAuthProvider} from '../services/firebase'
 
 export const USER_STORAGE_KEY = 'user'
 
@@ -20,8 +20,8 @@ function storeAfterResolve(key) {
     return new Promise((resolve, reject) => {
       Promise.resolve(promise)
         .then(value => {
-          AsyncStorage.setItem(key, JSON.stringify(value)).then(() => {
-            resolve(value)
+          AsyncStorage.setItem(key, JSON.stringify(value?.user)).then(() => {
+            resolve(value?.user)
           })
         })
         .catch(reject)
@@ -41,6 +41,12 @@ export function signIn(_key, email, password) {
 
 export function SignInAnonymous(_key) {
   return storeResolvedUser(auth.signInAnonymously())
+}
+
+export function createAccountFromAnonymous(email, password) {
+  const {currentUser} = auth
+  const credential = EmailAuthProvider.credential(email, password)
+  return storeResolvedUser(currentUser.linkWithCredential(credential))
 }
 
 export function signOut(doAfterSignOut) {
