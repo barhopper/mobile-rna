@@ -6,7 +6,7 @@ import TabBarIcon from '../components/TabBarIcon'
 import {default as HomeStack} from './HomeStack'
 import {default as PromotionScreen} from '../screens/PromotionsScreen'
 import {default as FavoritesScreen} from '../screens/FavoritesScreen'
-import LogOutScreen from '../screens/LogOutScreen'
+import {default as ProfileScreen} from '../screens/ProfileScreen'
 
 import {getFavorites} from '../actions/favorites'
 import {queryCache} from 'react-query'
@@ -67,7 +67,7 @@ export default function BottomTabNavigator({navigation, route}) {
       />
       <BottomTab.Screen
         name="Profile"
-        component={LogOutScreen}
+        component={ProfileScreen}
         options={{
           tabBarIcon: ({focused}) => (
             <TabBarIcon focused={focused} name="person" />

@@ -51,8 +51,16 @@ export function signOut(doAfterSignOut) {
   return storeResolvedUser(Promise.resolve(null))
 }
 
-export function changePassword(newPassword) {
-  return Promise.reject('This is just a stub')
+export async function changePassword(password, newPassword) {
+  const {currentUser} = auth
+
+  try {
+    await auth.signInWithEmailAndPassword(currentUser.email, password)
+    await currentUser.updatePassword(newPassword)
+    return Promise.resolve()
+  } catch (e) {
+    return Promise.reject(e)
+  }
 }
 
 export function resetPassword(email) {
