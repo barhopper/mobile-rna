@@ -26,6 +26,7 @@ export const firestore = firebase.firestore()
 
 export const storage = firebase.storage()
 export const imageRef = storage.ref('images/')
+export const profileImageRef = storage.ref('profileImages/')
 
 export const geo = geofirex.init(firebase)
 

@@ -1,10 +1,12 @@
 import React, {useState} from 'react'
-import {StyleSheet, View} from 'react-native'
+import {StyleSheet, View, Alert} from 'react-native'
 import {Layout, Input, Button, Text, Icon} from '@ui-kitten/components'
 
 import {BrandGradient} from '../components/BrandGradient'
 import {signIn, SignInAnonymous} from '../actions/auth'
 import {useUpdateUser} from '../contexts/userContext'
+
+import {auth} from '../services/firebase'
 
 // signIn doesnt use the normal theme so we need to overwrite but still stick to theme
 import {default as theme} from '../constants/Theme'
@@ -68,6 +70,28 @@ export default function LoginScreen({navigation}) {
   const handleLoginAsGuest = () => {
     const login = SignInAnonymous(null, email, password)
     handleLogin(login, updateUser)
+  }
+
+  const handlePasswordReset = () => {
+    if (!email) {
+      Alert.alert(
+        'Sorry',
+        'Enter your email so we know where to send the reset email',
+      )
+      return
+    }
+
+    auth
+      .sendPasswordResetEmail(email)
+      .then(() => {
+        Alert.alert(
+          'Thanks',
+          'Check your email for instructions on how to reset your password',
+        )
+      })
+      .catch(err => {
+        Alert.alert('Sorry', err.message)
+      })
   }
 
   return (
@@ -135,6 +159,16 @@ export default function LoginScreen({navigation}) {
           >
             <Text style={styles.lightText}>Continue Without Login</Text>
           </Button>
+          {passwordError && (
+            <Button
+              style={styles.button}
+              appearance="ghost"
+              status="basic"
+              onPress={handlePasswordReset}
+            >
+              <Text style={styles.lightText}>Reset Password</Text>
+            </Button>
+          )}
         </View>
       </BrandGradient>
     </Layout>

@@ -1,16 +1,14 @@
-import {default as React, useState, useEffect} from 'react'
-import {Image, Dimensions, StyleSheet} from 'react-native'
-import {Button, Layout, Modal} from '@ui-kitten/components'
-import {default as ImagePicker} from 'expo-image-picker'
+import {default as React, useEffect} from 'react'
+import {Alert} from 'react-native'
+import {Button} from '@ui-kitten/components'
+import * as ImagePicker from 'expo-image-picker'
 import Constants from 'expo-constants'
 
-export function UpdateImageModal() {
-  const [image, setImage] = useState(null)
-  const [isModalOpen, setIsModalOpen] = useState(false)
-  const toggleModal = () => setIsModalOpen(current => !current)
+import {changeUserImageAsync} from '../../actions/auth'
+import {useUpdateUser} from '../../contexts/userContext'
 
-  const {width} = Dimensions.get('window')
-  const modalWidth = width - 64
+export function UpdateImageModal() {
+  const updateUser = useUpdateUser()
 
   useEffect(() => {
     ;(async () => {
@@ -25,53 +23,30 @@ export function UpdateImageModal() {
 
   const pickImage = async () => {
     let result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ImagePicker.MediaTypeOptions.All,
+      mediaTypes: ImagePicker.MediaTypeOptions.Images,
       allowsEditing: true,
-      aspect: [4, 3],
-      quality: 1,
+      aspect: [1, 1],
+      quality: 0.5,
     })
 
     // console.log(result)
 
     if (!result.cancelled) {
-      setImage(result.uri)
+      changeUserImageAsync(result).then(photoURL => {
+        Alert.alert('Success', 'Image updated succesfully')
+        updateUser(current => {
+          return {
+            ...current,
+            photoURL,
+          }
+        })
+      })
     }
   }
 
   return (
-    <>
-      <Button appearance="ghost" onPress={toggleModal}>
-        Edit Image
-      </Button>
-      <Modal
-        visible={isModalOpen}
-        onBackdropPress={toggleModal}
-        backdropStyle={styles.backdrop}
-      >
-        <Layout style={[styles.modalContainer, {width: modalWidth}]}>
-          {image && (
-            <Image source={{uri: image}} style={{width: 200, height: 200}} />
-          )}
-          <Button onPress={pickImage}>Pick an image from camera roll</Button>
-        </Layout>
-      </Modal>
-    </>
+    <Button appearance="ghost" onPress={pickImage}>
+      Edit Image
+    </Button>
   )
 }
-
-const styles = StyleSheet.create({
-  modalContainer: {
-    flex: 1,
-    padding: 16,
-    borderRadius: 8,
-  },
-  backdrop: {
-    backgroundColor: 'rgba(0,0,0,0.4)',
-  },
-  marginBottom: {
-    marginBottom: 16,
-  },
-  marginTop: {
-    marginTop: 16,
-  },
-})

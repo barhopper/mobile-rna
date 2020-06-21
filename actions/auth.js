@@ -3,7 +3,7 @@
  * Everything im here should return a promise to be used by react-query
  */
 import {AsyncStorage} from 'react-native'
-import {auth, EmailAuthProvider} from '../services/firebase'
+import {auth, EmailAuthProvider, profileImageRef} from '../services/firebase'
 
 export const USER_STORAGE_KEY = 'user'
 
@@ -71,6 +71,30 @@ export async function changePassword(password, newPassword) {
 
 export function resetPassword(email) {
   return Promise.reject('This is just a stub')
+}
+
+export async function changeUserImageAsync(image) {
+  if (!image?.uri) return
+
+  const {currentUser} = auth
+  const isFirstPhoto = !currentUser.photoURL
+  const {uid} = currentUser
+  const fileName =
+    currentUser.photoURL || `${uid}.${image.uri.split('.').pop()}`
+
+  const fetchResponse = await fetch(image.uri)
+  const imageBlob = await fetchResponse.blob()
+
+  const uploadTask = await profileImageRef.child(fileName).put(imageBlob)
+  const finalUrl = await uploadTask.ref.getDownloadURL()
+
+  if (isFirstPhoto) {
+    await currentUser.updateProfile({
+      photoURL: finalUrl,
+    })
+  }
+
+  return Promise.resolve(finalUrl)
 }
 
 /**

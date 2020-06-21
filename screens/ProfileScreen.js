@@ -24,7 +24,7 @@ export default function ProfileScreen() {
   profileWidth = profileWidth > 200 ? 200 : profileWidth
 
   const profileRadius = profileWidth / 2
-  const userImg = isAnonymous ? null : user?.photoUrl
+  const userImg = user?.photoURL || null
   const userImageStyle = {
     width: profileWidth,
     height: profileWidth,
@@ -33,12 +33,7 @@ export default function ProfileScreen() {
   }
 
   const ProfileImage = userImg
-    ? props => (
-        <Image
-          source={require('../assets/images/generic_profile.png')}
-          {...props}
-        />
-      )
+    ? props => <Image source={{uri: userImg}} {...props} />
     : props => (
         <Image
           source={require('../assets/images/generic_profile.png')}
@@ -78,7 +73,7 @@ export default function ProfileScreen() {
           appearance="outline"
           onPress={() => signOut(() => updateUser(null))}
         >
-          Log Out
+          {isAnonymous ? 'Sign In Screen' : 'Log Out'}
         </Button>
       </View>
     </Layout>
