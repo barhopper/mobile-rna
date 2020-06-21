@@ -79,8 +79,7 @@ export async function changeUserImageAsync(image) {
   const {currentUser} = auth
   const isFirstPhoto = !currentUser.photoURL
   const {uid} = currentUser
-  const fileName =
-    currentUser.photoURL || `${uid}.${image.uri.split('.').pop()}`
+  const fileName = `${uid}.${image.uri.split('.').pop()}`
 
   const fetchResponse = await fetch(image.uri)
   const imageBlob = await fetchResponse.blob()
