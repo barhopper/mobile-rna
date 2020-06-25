@@ -1,6 +1,6 @@
 import React, {useState, useRef} from 'react'
-import {StyleSheet, View, ScrollView, useWindowDimensions} from 'react-native'
-import {Layout, Input, Button, Text, Icon} from '@ui-kitten/components'
+import {StyleSheet, View, useWindowDimensions} from 'react-native'
+import {Input, Button, Text, Icon} from '@ui-kitten/components'
 
 import {BrandGradient} from '../components/BrandGradient'
 import {signUp} from '../actions/auth'
@@ -11,6 +11,7 @@ import {useUpdateUser} from '../contexts/userContext'
 import {default as theme} from '../constants/Theme'
 
 import {rEMAIL, rUPPERCASE, rNUMBER} from '../constants/regex'
+import {ScreenContainer} from '../components/ScreenContainer'
 
 export default function SignUpScreen({navigation}) {
   const updateUser = useUpdateUser()
@@ -40,7 +41,7 @@ export default function SignUpScreen({navigation}) {
   const passwordUpperIconRef = useRef()
   const passwordNumberIconRef = useRef()
 
-  const {height} = useWindowDimensions()
+  const height = useWindowDimensions().height - 100
 
   const loginError = emailError || passwordError
 
@@ -129,147 +130,145 @@ export default function SignUpScreen({navigation}) {
   }
 
   return (
-    <Layout style={styles.layout}>
-      <ScrollView style={{height}}>
-        <BrandGradient style={{...styles.container, height: height - 80}}>
-          <View style={styles.loginContainer}>
-            {loginError && (
-              <View style={styles.error}>
-                <Icon
-                  name="alert-triangle-outline"
-                  fill={theme['color-basic-100']}
-                  style={styles.icon}
-                />
-                <Text style={[styles.lightText, {paddingLeft: 15}]}>
-                  {loginError}
-                </Text>
-              </View>
+    <ScreenContainer style={{height}}>
+      <BrandGradient style={[styles.container, {height}]}>
+        <View style={styles.loginContainer}>
+          {loginError && (
+            <View style={styles.error}>
+              <Icon
+                name="alert-triangle-outline"
+                fill={theme['color-basic-100']}
+                style={styles.icon}
+              />
+              <Text style={[styles.lightText, {paddingLeft: 15}]}>
+                {loginError}
+              </Text>
+            </View>
+          )}
+          <Input
+            style={styles.input}
+            status={'basic'}
+            label={evaProps => (
+              <Text {...evaProps} style={[evaProps.style, styles.lightText]}>
+                Email
+              </Text>
             )}
-            <Input
-              style={styles.input}
-              status={'basic'}
-              label={evaProps => (
-                <Text {...evaProps} style={[evaProps.style, styles.lightText]}>
-                  Email
-                </Text>
-              )}
-              placeholder="Enter Your Email"
-              value={email}
-              onChangeText={handleEmailChange}
-            />
-            <View style={styles.validContainer}>
-              <View style={styles.validSpan}>
-                <Icon
-                  {...(isEmailValid
-                    ? {
-                        name: 'checkmark-circle-2-outline',
-                        fill: theme['color-success-300'],
-                      }
-                    : {
-                        name: 'close-circle-outline',
-                        fill: theme['color-basic-100'],
-                      })}
-                  style={styles.validationIcon}
-                  animation="pulse"
-                  ref={validEmailIconRef}
-                />
-                <Text style={[styles.lightText, styles.validationText]}>
-                  Valid Email
-                </Text>
-              </View>
+            placeholder="Enter Your Email"
+            value={email}
+            onChangeText={handleEmailChange}
+          />
+          <View style={styles.validContainer}>
+            <View style={styles.validSpan}>
+              <Icon
+                {...(isEmailValid
+                  ? {
+                      name: 'checkmark-circle-2-outline',
+                      fill: theme['color-success-300'],
+                    }
+                  : {
+                      name: 'close-circle-outline',
+                      fill: theme['color-basic-100'],
+                    })}
+                style={styles.validationIcon}
+                animation="pulse"
+                ref={validEmailIconRef}
+              />
+              <Text style={[styles.lightText, styles.validationText]}>
+                Valid Email
+              </Text>
             </View>
-            <Input
-              style={styles.input}
-              status={'basic'}
-              label={evaProps => (
-                <Text {...evaProps} style={[evaProps.style, styles.lightText]}>
-                  Password
-                </Text>
-              )}
-              placeholder="Enter Your password"
-              value={password}
-              onChangeText={handlePasswordChange}
-              secureTextEntry
-            />
-            <View style={styles.validContainer}>
-              <View style={styles.validSpan}>
-                <Icon
-                  {...(passwordHasLength
-                    ? {
-                        name: 'checkmark-circle-2-outline',
-                        fill: theme['color-success-300'],
-                      }
-                    : {
-                        name: 'close-circle-outline',
-                        fill: theme['color-basic-100'],
-                      })}
-                  style={styles.validationIcon}
-                  animation="pulse"
-                  ref={passwordLengthIconRef}
-                />
-                <Text style={[styles.lightText, styles.validationText]}>
-                  At least 8 characters long
-                </Text>
-              </View>
-              <View style={styles.validSpan}>
-                <Icon
-                  {...(passwordHasUppercase
-                    ? {
-                        name: 'checkmark-circle-2-outline',
-                        fill: theme['color-success-300'],
-                      }
-                    : {
-                        name: 'close-circle-outline',
-                        fill: theme['color-basic-100'],
-                      })}
-                  style={styles.validationIcon}
-                  animation="pulse"
-                  ref={passwordUpperIconRef}
-                />
-                <Text style={[styles.lightText, styles.validationText]}>
-                  Contains uppercase letter
-                </Text>
-              </View>
-              <View style={styles.validSpan}>
-                <Icon
-                  {...(passwordHasNumber
-                    ? {
-                        name: 'checkmark-circle-2-outline',
-                        fill: theme['color-success-300'],
-                      }
-                    : {
-                        name: 'close-circle-outline',
-                        fill: theme['color-basic-100'],
-                      })}
-                  style={styles.validationIcon}
-                  animation="pulse"
-                  ref={passwordNumberIconRef}
-                />
-                <Text style={[styles.lightText, styles.validationText]}>
-                  Contains a number
-                </Text>
-              </View>
-            </View>
-
-            <Button
-              style={[styles.button, styles.firstButton]}
-              appearance="filled"
-              onPress={() => handleSignup(updateUser)}
-            >
-              Create Account
-            </Button>
-            <Button
-              style={styles.button}
-              appearance="ghost"
-              status="basic"
-              onPress={pushToSignIn}
-            >
-              <Text style={styles.lightText}>Log In</Text>
-            </Button>
           </View>
-        </BrandGradient>
-      </ScrollView>
-    </Layout>
+          <Input
+            style={styles.input}
+            status={'basic'}
+            label={evaProps => (
+              <Text {...evaProps} style={[evaProps.style, styles.lightText]}>
+                Password
+              </Text>
+            )}
+            placeholder="Enter Your password"
+            value={password}
+            onChangeText={handlePasswordChange}
+            secureTextEntry
+          />
+          <View style={styles.validContainer}>
+            <View style={styles.validSpan}>
+              <Icon
+                {...(passwordHasLength
+                  ? {
+                      name: 'checkmark-circle-2-outline',
+                      fill: theme['color-success-300'],
+                    }
+                  : {
+                      name: 'close-circle-outline',
+                      fill: theme['color-basic-100'],
+                    })}
+                style={styles.validationIcon}
+                animation="pulse"
+                ref={passwordLengthIconRef}
+              />
+              <Text style={[styles.lightText, styles.validationText]}>
+                At least 8 characters long
+              </Text>
+            </View>
+            <View style={styles.validSpan}>
+              <Icon
+                {...(passwordHasUppercase
+                  ? {
+                      name: 'checkmark-circle-2-outline',
+                      fill: theme['color-success-300'],
+                    }
+                  : {
+                      name: 'close-circle-outline',
+                      fill: theme['color-basic-100'],
+                    })}
+                style={styles.validationIcon}
+                animation="pulse"
+                ref={passwordUpperIconRef}
+              />
+              <Text style={[styles.lightText, styles.validationText]}>
+                Contains uppercase letter
+              </Text>
+            </View>
+            <View style={styles.validSpan}>
+              <Icon
+                {...(passwordHasNumber
+                  ? {
+                      name: 'checkmark-circle-2-outline',
+                      fill: theme['color-success-300'],
+                    }
+                  : {
+                      name: 'close-circle-outline',
+                      fill: theme['color-basic-100'],
+                    })}
+                style={styles.validationIcon}
+                animation="pulse"
+                ref={passwordNumberIconRef}
+              />
+              <Text style={[styles.lightText, styles.validationText]}>
+                Contains a number
+              </Text>
+            </View>
+          </View>
+
+          <Button
+            style={[styles.button, styles.firstButton]}
+            appearance="filled"
+            onPress={() => handleSignup(updateUser)}
+          >
+            Create Account
+          </Button>
+          <Button
+            style={styles.button}
+            appearance="ghost"
+            status="basic"
+            onPress={pushToSignIn}
+          >
+            <Text style={styles.lightText}>Log In</Text>
+          </Button>
+        </View>
+      </BrandGradient>
+    </ScreenContainer>
   )
 }
 

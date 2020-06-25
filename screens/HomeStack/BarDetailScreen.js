@@ -48,7 +48,7 @@ export default function BarDetailScreen({route, navigation}) {
   const reviewTotal =
     reviewValues.reduce((acc, cur) => acc + (cur - 0), 0) - bar.reviews?.count
   const avgReview = reviewTotal > 0 && reviewTotal / (reviewValues.length - 1)
-  const numStars = avgReview && Math.floor(avgReview / 2)
+  const numStars = avgReview && Math.round(avgReview / 2)
 
   const favorites = queryCache.getQueryData(['favorites', userId])
   const favRecord = bar && favorites ? favorites[bar?.id || 'nothing'] : false
@@ -380,7 +380,8 @@ export default function BarDetailScreen({route, navigation}) {
           ) : (
             <NoReviews barName={bar.barName} />
           )}
-          {numStars && (
+
+          {(numStars || numStars === 0) && (
             <View
               style={{
                 flexDirection: 'row',
@@ -393,6 +394,7 @@ export default function BarDetailScreen({route, navigation}) {
                 OVERALL:
               </Text>
               <FlatList
+                horizontal
                 data={Array(numStars).fill(1)}
                 renderItem={(_item, index) => (
                   <Icon
@@ -402,10 +404,10 @@ export default function BarDetailScreen({route, navigation}) {
                     style={styles.infoIcon}
                   />
                 )}
-                horizontal
               />
             </View>
           )}
+
           <Button onPress={navigateToReview}>Leave A Review</Button>
         </View>
       </ScrollView>
