@@ -10,6 +10,7 @@ import {CopyModal} from './ProfileScreens/CopyModal'
 import {signOut} from '../actions/auth'
 import {getAbout, getPrivacyPolicy, getTerms} from '../actions/copy'
 import {useUpdateUser, useUser} from '../contexts/userContext'
+import {ScreenContainer} from '../components/ScreenContainer'
 
 export default function ProfileScreen() {
   const {width} = Dimensions.get('window')
@@ -42,41 +43,43 @@ export default function ProfileScreen() {
       )
 
   return (
-    <Layout style={styles.container}>
-      <View style={styles.profileMain}>
-        {/* if signed in */}
-        <ProfileImage style={userImageStyle} />
-        {!isAnonymous && <UpdateImageModal />}
+    <ScreenContainer style={{backgroundColor: '#fff'}}>
+      <Layout style={styles.container}>
+        <View style={styles.profileMain}>
+          {/* if signed in */}
+          <ProfileImage style={userImageStyle} />
+          {!isAnonymous && <UpdateImageModal />}
 
-        {isAnonymous ? (
-          <LinkAccountModal buttonStyle={{width: width - 30}} />
-        ) : (
-          <Text category="h5" style={styles.profileText}>
-            {email}
-          </Text>
-        )}
-      </View>
-      <View>
-        {/* If signed in */}
-        {/* Link to change password */}
-        {!isAnonymous && <PasswordChangeModal />}
-        {/* update image/name */}
+          {isAnonymous ? (
+            <LinkAccountModal buttonStyle={{width: width - 30}} />
+          ) : (
+            <Text category="h5" style={styles.profileText}>
+              {email}
+            </Text>
+          )}
+        </View>
+        <View>
+          {/* If signed in */}
+          {/* Link to change password */}
+          {!isAnonymous && <PasswordChangeModal />}
+          {/* update image/name */}
 
-        {/* always */}
-        {/* link to about */}
-        <CopyModal title="About" fetchFunction={getAbout} />
-        {/* link to terms */}
-        <CopyModal title="Terms and Conditions" fetchFunction={getTerms} />
-        {/* link to privacy policy */}
-        <CopyModal title="Privacy Policy" fetchFunction={getPrivacyPolicy} />
-        <Button
-          appearance="outline"
-          onPress={() => signOut(() => updateUser(null))}
-        >
-          {isAnonymous ? 'Sign In Screen' : 'Log Out'}
-        </Button>
-      </View>
-    </Layout>
+          {/* always */}
+          {/* link to about */}
+          <CopyModal title="About" fetchFunction={getAbout} />
+          {/* link to terms */}
+          <CopyModal title="Terms and Conditions" fetchFunction={getTerms} />
+          {/* link to privacy policy */}
+          <CopyModal title="Privacy Policy" fetchFunction={getPrivacyPolicy} />
+          <Button
+            appearance="outline"
+            onPress={() => signOut(() => updateUser(null))}
+          >
+            {isAnonymous ? 'Sign In Screen' : 'Log Out'}
+          </Button>
+        </View>
+      </Layout>
+    </ScreenContainer>
   )
 }
 

@@ -76,5 +76,7 @@ export default function AuthStack() {
 const styles = StyleSheet.create({
   header: {
     backgroundColor: theme['color-primary-500'],
+    borderBottomColor: theme['color-primary-500'],
+    shadowColor: 'transparent',
   },
 })

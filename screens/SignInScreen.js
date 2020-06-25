@@ -1,8 +1,9 @@
 import React, {useState} from 'react'
-import {StyleSheet, View, Alert} from 'react-native'
-import {Layout, Input, Button, Text, Icon} from '@ui-kitten/components'
+import {StyleSheet, View, Alert, Dimensions} from 'react-native'
+import {Input, Button, Text, Icon} from '@ui-kitten/components'
 
 import {BrandGradient} from '../components/BrandGradient'
+import {ScreenContainer} from '../components/ScreenContainer'
 import {signIn, SignInAnonymous} from '../actions/auth'
 import {useUpdateUser} from '../contexts/userContext'
 
@@ -13,6 +14,7 @@ import {default as theme} from '../constants/Theme'
 
 export default function LoginScreen({navigation}) {
   const updateUser = useUpdateUser()
+  const height = Dimensions.get('window').height - 100
 
   const [email, setEmail] = useState('')
   const [emailError, setEmailError] = useState(null)
@@ -95,8 +97,8 @@ export default function LoginScreen({navigation}) {
   }
 
   return (
-    <Layout style={styles.layout}>
-      <BrandGradient style={styles.container}>
+    <ScreenContainer style={{height}}>
+      <BrandGradient style={[styles.container, {height}]}>
         <View style={styles.loginContainer}>
           {loginError && (
             <View style={styles.error}>
@@ -159,19 +161,17 @@ export default function LoginScreen({navigation}) {
           >
             <Text style={styles.lightText}>Continue Without Login</Text>
           </Button>
-          {passwordError && (
-            <Button
-              style={styles.button}
-              appearance="ghost"
-              status="basic"
-              onPress={handlePasswordReset}
-            >
-              <Text style={styles.lightText}>Reset Password</Text>
-            </Button>
-          )}
+          <Button
+            style={styles.button}
+            appearance="ghost"
+            status="basic"
+            onPress={handlePasswordReset}
+          >
+            <Text style={styles.lightText}>Reset Password</Text>
+          </Button>
         </View>
       </BrandGradient>
-    </Layout>
+    </ScreenContainer>
   )
 }
 

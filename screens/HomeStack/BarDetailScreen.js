@@ -51,7 +51,7 @@ export default function BarDetailScreen({route, navigation}) {
   const numStars = avgReview && Math.floor(avgReview / 2)
 
   const favorites = queryCache.getQueryData(['favorites', userId])
-  const favRecord = bar ? favorites[bar.id] : false
+  const favRecord = bar && favorites ? favorites[bar?.id || 'nothing'] : false
 
   let barHours = 'No Hours'
   if (bar.barOpeningHours && bar.barClosingHours) {
