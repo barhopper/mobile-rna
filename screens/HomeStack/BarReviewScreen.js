@@ -1,5 +1,5 @@
 import {default as React, useState, useLayoutEffect} from 'react'
-import {StyleSheet} from 'react-native'
+import {StyleSheet, Alert} from 'react-native'
 import {
   Layout,
   Spinner,
@@ -11,12 +11,15 @@ import {
 
 import {useQuery} from 'react-query'
 import {getQuestions, submitReview} from '../../actions/bars'
+import {useUser} from '../../contexts/userContext'
 
 import {default as theme} from '../../constants/Theme'
 
 const outOf10 = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
 
 export default function BarReviewScreen({navigation, route}) {
+  const user = useUser()
+
   const [formData, setFormData] = useState({})
   const [errors, setErrors] = useState([])
   const {error, status, data: questions} = useQuery('questions', getQuestions)
@@ -34,6 +37,14 @@ export default function BarReviewScreen({navigation, route}) {
   }
 
   const handleAddReview = () => {
+    if (user.isAnonymous) {
+      Alert.alert('Sorry', 'You must create an account to add a Review', [
+        {text: 'Create Account', onPress: () => navigation.navigate('Profile')},
+        {text: 'Cancel', onPress: () => {}},
+      ])
+      return
+    }
+
     let sQuestions = JSON.parse(JSON.stringify(questions))
     let hasErrors = false
 
@@ -71,6 +82,15 @@ export default function BarReviewScreen({navigation, route}) {
       })
       .catch(err => {
         console.log(err)
+        Alert.alert('Sorry', err.message || 'Something Went Wrong', [
+          {
+            text: 'OK',
+            onPress: () => navigation.goBack(),
+          },
+        ])
+      })
+      .finally(() => {
+        setIsSubmitting(false)
       })
   }
 
@@ -96,7 +116,7 @@ export default function BarReviewScreen({navigation, route}) {
               />
             )}
           />
-          <Button onPress={!isSubmitting && handleAddReview}>
+          <Button onPress={!isSubmitting ? handleAddReview : () => {}}>
             {isSubmitting ? (
               <Spinner status="basic" size="small" />
             ) : (
@@ -151,8 +171,8 @@ const QuestionInput = ({
       style={{marginTop: 16}}
       caption={hasError && 'please enter a value'}
     >
-      {outOf10.map(n => (
-        <SelectItem key={n} title={`${n}`} />
+      {outOf10.map((n, idx) => (
+        <SelectItem key={n} title={idx + 1} />
       ))}
     </Select>
   )
