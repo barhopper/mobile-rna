@@ -56,7 +56,9 @@ export default function FavoriteListScreen({navigation}) {
       ) : (
         <List
           data={favList}
-          renderItem={props => <BarCard {...props} onPress={handleSelect} />}
+          renderItem={props => (
+            <BarCard {...props} key={props.item.id} onPress={handleSelect} />
+          )}
         />
       )}
     </Layout>

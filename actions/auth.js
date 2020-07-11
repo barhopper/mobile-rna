@@ -50,7 +50,12 @@ export function createAccountFromAnonymous(email, password) {
 }
 
 export function signOut(doAfterSignOut) {
-  auth.signOut()
+  try {
+    auth.signOut()
+  } catch (e) {
+    // we dont need to handle this if it fails
+  }
+
   if (typeof doAfterSignOut === 'function') {
     doAfterSignOut()
   }

@@ -165,6 +165,7 @@ export default function PromotionScreen({navigation}) {
           renderItem={props => (
             <PromotionCard
               {...props}
+              key={props.item.id}
               onPress={emptySlots === 10 ? resumeSearch : handleSelect}
               TouchableOpacityProps={{style: {color: 'red'}}}
               isFetching={isFetching}
@@ -175,6 +176,7 @@ export default function PromotionScreen({navigation}) {
             if (!title) return null
             return (
               <InViewPort
+                key={title}
                 onChange={() => setSlotModifier(current => current + 1)}
               >
                 <Text category="h4">{getTimeStringFromUTCEpoch(title)}</Text>

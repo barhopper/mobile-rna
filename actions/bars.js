@@ -33,16 +33,20 @@ export function searchForBars(_keys, distance, position) {
       .within(position, distance, 'position', {units: 'mi'})
 
     get(geoQuery)
-      .then(snapshot => {
+      .then(results => {
         const urlPromises = []
         //TODO this needs to add the url of the image in storage
         const bars = []
-        snapshot.forEach(bar => {
+        results.forEach(bar => {
           let urlPromise = null
           if (bar.barCoverImage) {
-            urlPromise = imageRef.child(bar.barCoverImage).getDownloadURL()
+            urlPromise = imageRef
+              .child(`${bar.id}/${bar.barCoverImage}`)
+              .getDownloadURL()
           } else {
-            urlPromise = imageRef.child('generic_bar_00.png').getDownloadURL()
+            urlPromise = imageRef
+              .child('public/generic_bar_00.png')
+              .getDownloadURL()
           }
 
           urlPromises.push(Promise.resolve(urlPromise))
@@ -82,10 +86,12 @@ export async function getBar(_key, barId) {
 
       if (barData.barCoverImage) {
         imgPromise = await imageRef
-          .child(barData.barCoverImage)
+          .child(`${barSnapshot.id}/${barData.barCoverImage}`)
           .getDownloadURL()
       } else {
-        imgPromise = await imageRef.child('generic_bar_00.png').getDownloadURL()
+        imgPromise = await imageRef
+          .child('public/generic_bar_00.png')
+          .getDownloadURL()
       }
 
       barData.imgUrl = imgPromise

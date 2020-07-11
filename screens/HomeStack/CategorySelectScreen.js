@@ -80,13 +80,23 @@ export default function CategorySelectScreen({navigation}) {
           </>
         )}
       </ScrollView>
-      <View style={{alignItems: 'center'}}>
+      <View
+        style={{
+          alignItems: 'center',
+          flexDirection: 'row',
+          justifyContent: 'space-between',
+        }}
+      >
         <Button
+          style={{flex: 0.45}}
           status="primary"
-          style={styles.searchButton}
-          onPress={handleSearch}
+          appearance="outline"
+          onPress={() => setSelected(new Set())}
         >
-          GO
+          Clear Filters
+        </Button>
+        <Button style={{flex: 0.45}} status="primary" onPress={handleSearch}>
+          Search
         </Button>
       </View>
     </Layout>

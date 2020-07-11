@@ -203,7 +203,7 @@ export default function BarDetailScreen({route, navigation}) {
 
       let imgUrlPromises = bar.barImages.map(url => {
         return imageRef
-          .child(url)
+          .child(`${bar.id}/${url}`)
           .getDownloadURL()
           .then(res => imgUrls.push(res))
           .catch(e => console.log('Error: ', e))
@@ -232,8 +232,10 @@ export default function BarDetailScreen({route, navigation}) {
     if (!url) return
     _url = typeof url !== 'string' ? url.toString() : url
     _url = _url.match(/http(s)?:\/\//) ? _url : `https://${_url}`
-    Linking.openURL(`${_url}`).catch(err =>
-      console.error("Couldn't load page", err),
+    Linking.openURL(`${_url}`).catch(() =>
+      Alert.alert('Sorry', `We couldn't open the link, maybe it's invalid`, [
+        {text: 'Ok', onPress: () => {}},
+      ]),
     )
   }
 

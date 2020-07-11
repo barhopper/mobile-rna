@@ -15,6 +15,7 @@ import {useQuery} from 'react-query'
 import {searchForBars} from '../../actions/bars'
 import {watchLocationWithPermission} from '../../utils/permissions'
 import {geo} from '../../services/firebase'
+import moment from 'moment'
 
 /***********************************************************
  *
@@ -66,9 +67,15 @@ export default function BarListScreen({route, navigation}) {
       return
     }
 
+    let today = moment(new Date()).format('dddd')
+    today = today.toLowerCase()
+
     const filteredBars = data.filter(bar => {
+      let barTags = bar?.categories?.[today] || {}
+      barTags = Object.values(barTags).flat()
+
       for (const tag of tags) {
-        if (bar[tag] !== true) return false
+        if (!barTags.includes(tag)) return false
       }
 
       return true
@@ -162,7 +169,9 @@ export default function BarListScreen({route, navigation}) {
       ) : (
         <List
           data={bars}
-          renderItem={props => <BarCard {...props} onPress={handleSelect} />}
+          renderItem={props => (
+            <BarCard {...props} key={props.item.id} onPress={handleSelect} />
+          )}
         />
       )}
     </Layout>
@@ -210,6 +219,7 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     backgroundColor: theme['color-primary-500'],
     marginRight: 10,
+    marginVertical: 3,
     paddingVertical: 2,
     paddingHorizontal: 10,
     borderRadius: 50,

@@ -109,6 +109,7 @@ export default function BarReviewScreen({navigation, route}) {
             renderItem={props => (
               <QuestionInput
                 {...props}
+                key={props.item.id}
                 setFormData={updateFormState}
                 formState={formData}
                 errors={errors}
