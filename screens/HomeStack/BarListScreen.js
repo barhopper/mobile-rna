@@ -286,10 +286,7 @@ const BarCard = ({item: bar, onPress}) => {
             style={[cardStyles.details, {width: infoWidth}]}
             numberOfLines={3}
           >
-            Lorem Ipsum Bar Details and All That Jazzzz, Lorem Ipsum Bar Details
-            and All That Jazzzz, Lorem Ipsum Bar Details and All That Jazzzz,
-            Lorem Ipsum Bar Details and All That Jazzzz, Lorem Ipsum Bar Details
-            and All That JazzzzLorem Ipsum Bar Details and All That Jazzzz
+            {bar.barDescription || ''}
           </Text>
         </View>
       </View>
