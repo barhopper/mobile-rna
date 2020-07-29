@@ -15,9 +15,4 @@ export const BAR_SHAPE = {
       lon: '',
     },
   },
-  details: {
-    uuid: {
-      // DetailDATA
-    },
-  },
 }

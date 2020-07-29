@@ -348,7 +348,7 @@ export default function BarDetailScreen({route, navigation}) {
           </View>
         </View>
         {/* Live Stream Button */}
-        {bar.liveUrl && (
+        {bar?.liveUrl ? (
           <Button
             appearance="ghost"
             size="small"
@@ -357,7 +357,7 @@ export default function BarDetailScreen({route, navigation}) {
           >
             Watch Live Stream
           </Button>
-        )}
+        ) : null}
         {/* Uber Button */}
         {/* Checkin Block */}
         {/* Ratings Block */}
@@ -383,7 +383,7 @@ export default function BarDetailScreen({route, navigation}) {
             <NoReviews barName={bar.barName} />
           )}
 
-          {(numStars || numStars === 0) && (
+          {numStars || numStars === 0 ? (
             <View
               style={{
                 flexDirection: 'row',
@@ -408,7 +408,7 @@ export default function BarDetailScreen({route, navigation}) {
                 )}
               />
             </View>
-          )}
+          ) : null}
 
           <Button onPress={navigateToReview}>Leave A Review</Button>
         </View>
