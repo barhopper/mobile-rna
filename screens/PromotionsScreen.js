@@ -55,7 +55,10 @@ export default function PromotionScreen({navigation}) {
   useEffect(() => {
     navigation.addListener('focus', () => {
       // do something
-      subscription.current = watchLocationWithPermission(handleLocationChange)
+      watchLocationWithPermission(handleLocationChange).then(
+        unsub => (subscription.current = unsub),
+      )
+
       navigation.setOptions({title: 'Promotions'})
     })
 
