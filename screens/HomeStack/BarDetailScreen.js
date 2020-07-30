@@ -41,7 +41,7 @@ export default function BarDetailScreen({route, navigation}) {
 
   const {width} = Dimensions.get('window')
   const fiftyPercent = width / 2
-  const infoItemWidth = width / 2 - 30
+  const infoItemWidth = width - 60
   const floatingWidth = width - 30
 
   const reviewValues = Object.values(bar.reviews || {})
@@ -298,7 +298,12 @@ export default function BarDetailScreen({route, navigation}) {
 
         {/* Info block with quick data points */}
         <View style={styles.infoBlock}>
-          <View style={[styles.infoItem, {width: infoItemWidth}]}>
+          <View
+            style={[
+              styles.infoItem,
+              {maxWidth: infoItemWidth, minWidth: infoItemWidth / 2},
+            ]}
+          >
             <Icon
               name="paper-plane"
               fill={theme['color-primary-600']}
@@ -306,15 +311,12 @@ export default function BarDetailScreen({route, navigation}) {
             />
             <Text>{distance.toFixed(2)} Mi.</Text>
           </View>
-          <View style={[styles.infoItem, {width: infoItemWidth}]}>
-            <Icon
-              name="smartphone-outline"
-              fill={theme['color-primary-600']}
-              style={styles.infoIcon}
-            />
-            <Text>{bar?.barPhone || 'No Phone Number'}</Text>
-          </View>
-          <View style={[styles.infoItem, {width: infoItemWidth}]}>
+          <View
+            style={[
+              styles.infoItem,
+              {maxWidth: infoItemWidth, minWidth: infoItemWidth / 2},
+            ]}
+          >
             <Icon
               name="pin"
               fill={theme['color-primary-600']}
@@ -322,15 +324,25 @@ export default function BarDetailScreen({route, navigation}) {
             />
             <Text>{bar?.barAddress || 'No Address'}</Text>
           </View>
-          <View style={[styles.infoItem, {width: infoItemWidth}]}>
+          <View
+            style={[
+              styles.infoItem,
+              {maxWidth: infoItemWidth, minWidth: infoItemWidth / 2},
+            ]}
+          >
             <Icon
-              name="clock-outline"
+              name="smartphone-outline"
               fill={theme['color-primary-600']}
               style={styles.infoIcon}
             />
-            <Text>{barHours}</Text>
+            <Text>{bar?.barPhone || 'No Phone Number'}</Text>
           </View>
-          <View style={[styles.infoItem, {width: infoItemWidth}]}>
+          <View
+            style={[
+              styles.infoItem,
+              {maxWidth: infoItemWidth, minWidth: infoItemWidth / 2},
+            ]}
+          >
             <Icon
               name="globe-outline"
               fill={theme['color-primary-600']}
@@ -338,13 +350,31 @@ export default function BarDetailScreen({route, navigation}) {
             />
             <Text>{bar.barUrl || 'No Website'}</Text>
           </View>
-          <View style={[styles.infoItem, {width: infoItemWidth}]}>
+          <View
+            style={[
+              styles.infoItem,
+              {maxWidth: infoItemWidth, minWidth: infoItemWidth / 2},
+            ]}
+          >
             <Icon
               name="calendar-outline"
               fill={theme['color-primary-600']}
               style={styles.infoIcon}
             />
             <Text>{bar.barOpenDays || 'No Days'}</Text>
+          </View>
+          <View
+            style={[
+              styles.infoItem,
+              {maxWidth: infoItemWidth, minWidth: infoItemWidth / 2},
+            ]}
+          >
+            <Icon
+              name="clock-outline"
+              fill={theme['color-primary-600']}
+              style={styles.infoIcon}
+            />
+            <Text>{barHours}</Text>
           </View>
         </View>
         {/* Live Stream Button */}
@@ -454,10 +484,9 @@ const styles = StyleSheet.create({
     width: 100,
   },
   infoBlock: {
-    flex: 0.3,
     flexWrap: 'wrap',
     flexDirection: 'row',
-    justifyContent: 'space-between',
+    justifyContent: 'flex-start',
     padding: 16,
   },
   infoIcon: {
@@ -467,9 +496,9 @@ const styles = StyleSheet.create({
   },
   infoItem: {
     flexDirection: 'row',
-    height: 26,
+    minHeight: 26,
     marginVertical: 4,
-    elevation: 5,
+    marginRight: 14,
   },
 })
 
@@ -483,3 +512,11 @@ const NoReviews = ({barName}) => {
     </View>
   )
 }
+
+// function measureHeightAsync(component) {
+//   return new Promise(resolve => {
+//     component.measure((x, y, w, h) => {
+//       resolve(h)
+//     })
+//   })
+// }

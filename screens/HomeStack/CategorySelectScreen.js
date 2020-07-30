@@ -93,7 +93,7 @@ export default function CategorySelectScreen({navigation}) {
           appearance="outline"
           onPress={() => setSelected(new Set())}
         >
-          Clear Filters
+          Clear
         </Button>
         <Button style={{flex: 0.45}} status="primary" onPress={handleSearch}>
           Search

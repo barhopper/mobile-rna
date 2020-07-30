@@ -129,7 +129,6 @@ const styles = StyleSheet.create({
  *
  ***********************************************************/
 const BarCard = ({item: favorite, onPress}) => {
-  const distance = 0
   const {width} = Dimensions.get('window')
   const infoWidth = width - 30 - 115 - 30
   // Object {
@@ -153,7 +152,6 @@ const BarCard = ({item: favorite, onPress}) => {
             <Text category="label" style={{fontWeight: 'bold', fontSize: 12}}>
               {favorite.barName}
             </Text>
-            <Text category="label">{distance && distance.toFixed(2)} Mi.</Text>
           </View>
           <View style={cardStyles.redbar}></View>
           {/* Description */}
