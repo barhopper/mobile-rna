@@ -6,10 +6,10 @@ import {
   ImageBackground,
   ScrollView,
   FlatList,
-  Linking,
   Alert,
 } from 'react-native'
-import {Layout, Text, Icon, Button, Spinner} from '@ui-kitten/components'
+import {Layout, Card, Modal, Text, Icon, Button, Spinner} from '@ui-kitten/components'
+import { WebView } from 'react-native-webview';
 
 // import {queryCache} from 'react-query'
 import {imageRef} from '../../services/firebase'
@@ -227,17 +227,14 @@ export default function BarDetailScreen({route, navigation}) {
     navigation.navigate('review', {barId: bar.id})
   }
 
-  const loadInBrowser = url => {
+ const safeUrl = url => {
     let _url = ''
     if (!url) return
     _url = typeof url !== 'string' ? url.toString() : url
     _url = _url.match(/http(s)?:\/\//) ? _url : `https://${_url}`
-    Linking.openURL(`${_url}`).catch(() =>
-      Alert.alert('Sorry', `We couldn't open the link, maybe it's invalid`, [
-        {text: 'Ok', onPress: () => {}},
-      ]),
-    )
-  }
+    return _url
+}
+  const [visible, setVisible] = React.useState(false);
 
   if (status === 'error') return null
 
@@ -379,14 +376,28 @@ export default function BarDetailScreen({route, navigation}) {
         </View>
         {/* Live Stream Button */}
         {bar?.liveUrl ? (
-          <Button
-            appearance="ghost"
-            size="small"
-            onPress={() => loadInBrowser(bar.liveUrl || '')}
-            style={{marginHorizontal: 30}}
-          >
+          <Layout style={styles.button} level='1'>
+          <Button onPress={() => setVisible(true)}>
             Watch Live Stream
           </Button>
+          
+          <Modal visible={visible}>
+          <Card disabled={true}>
+          <View>
+          <WebView
+            useWebKit={true} 
+            originWhitelist={['*']}
+            style={{flex:1}}
+            javaScriptEnabled={true}
+            source={{uri: safeUrl(bar?.liveUrl)}}
+          />
+          </View>
+          <Button onPress={() => setVisible(false)}> {/* Used to close the url from WebView component */}
+            DISMISS
+          </Button>
+        </Card>
+      </Modal>
+      </Layout>
         ) : null}
         {/* Uber Button */}
         {/* Checkin Block */}
@@ -473,7 +484,10 @@ const styles = StyleSheet.create({
     borderRadius: 4,
     margin: 16,
   },
-  button: {},
+  button: {
+    width: '50%',
+    alignSelf: 'center',
+  },
   bannerImage: {
     flex: 1,
     height: 200,
