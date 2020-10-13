@@ -8,9 +8,17 @@ import {
   FlatList,
   Alert,
 } from 'react-native'
-import {Layout, Card, Modal, Text, Icon, Button, Spinner} from '@ui-kitten/components'
-import { WebView } from 'react-native-webview';
-
+import {
+  Layout,
+  Card,
+  Modal,
+  Text,
+  Icon,
+  Button,
+  Spinner,
+} from '@ui-kitten/components'
+import {WebView} from 'react-native-webview'
+import {RadioButton} from 'react-native-paper'
 // import {queryCache} from 'react-query'
 import {imageRef} from '../../services/firebase'
 
@@ -227,15 +235,15 @@ export default function BarDetailScreen({route, navigation}) {
     navigation.navigate('review', {barId: bar.id})
   }
 
- const safeUrl = url => {
+  const safeUrl = url => {
     let _url = ''
     if (!url) return
     _url = typeof url !== 'string' ? url.toString() : url
     _url = _url.match(/http(s)?:\/\//) ? _url : `https://${_url}`
     return _url
-}
-  const [visible, setVisible] = React.useState(false);
-
+  }
+  const [visible, setVisible] = React.useState(false)
+  const [value, setValue] = React.useState('first')
   if (status === 'error') return null
 
   return (
@@ -292,6 +300,106 @@ export default function BarDetailScreen({route, navigation}) {
             )}
           </View>
         </ImageBackground>
+
+        <Layout style={styles.button} level="1">
+          <Button
+            onPress={() => setVisible(true)}
+            style={[{backgroundColor: '#299334', borderColor: '#299334'}]}
+          >
+            Check-In
+          </Button>
+
+          <Modal visible={visible}>
+            <Card disabled={true}>
+              <View
+                style={{
+                  width: 300,
+                  justifyContent: 'center',
+                  alignItems: 'center',
+                  height: 20,
+                }}
+              >
+                <Text style={{textAlign: 'center', fontWeight: '700'}}>
+                  {`Check-In to ${bar.barName}`}
+                </Text>
+              </View>
+
+              <View
+                style={{
+                  justifyContent: 'center',
+                  alignItems: 'center',
+                  height: 80,
+                }}
+              >
+                <Text style={{textAlign: 'center', fontWeight: '700'}}>
+                  {`Please Select Gender:`}
+                </Text>
+              </View>
+
+              <RadioButton.Group
+                onValueChange={value => setValue(value)}
+                value={value}
+              >
+                <View style={{justifyContent: 'center', alignItems: 'center'}}>
+                  <Text>Male</Text>
+                  <RadioButton value="Male" />
+                </View>
+                <View style={{justifyContent: 'center', alignItems: 'center'}}>
+                  <Text>Female</Text>
+                  <RadioButton value="Female" />
+                </View>
+              </RadioButton.Group>
+
+              <View
+                style={{
+                  justifyContent: 'center',
+                  alignItems: 'center',
+                  height: 80,
+                }}
+              >
+                <Text style={{textAlign: 'center', fontWeight: '700'}}>
+                  {`Please Select Status:`}
+                </Text>
+              </View>
+
+              <RadioButton.Group
+                onValueChange={value => setValue(value)}
+                value={value}
+              >
+                <View style={{justifyContent: 'center', alignItems: 'center'}}>
+                  <Text>Single</Text>
+                  <RadioButton value="Male" />
+                </View>
+                <View style={{justifyContent: 'center', alignItems: 'center'}}>
+                  <Text>Not Single</Text>
+                  <RadioButton value="Female" />
+                </View>
+              </RadioButton.Group>
+
+              <Button
+                onPress={() => setVisible(false)}
+                style={[
+                  {
+                    marginTop: 20,
+                    marginBottom: 20,
+                    backgroundColor: '#299334',
+                    borderColor: '#299334',
+                  },
+                ]}
+              >
+                {' '}
+                {/* Used to close the url from WebView component */}
+                CHECK-IN
+              </Button>
+
+              <Button onPress={() => setVisible(false)}>
+                {' '}
+                {/* Used to close the url from WebView component */}
+                SKIP
+              </Button>
+            </Card>
+          </Modal>
+        </Layout>
 
         {/* Info block with quick data points */}
         <View style={styles.infoBlock}>
@@ -374,33 +482,35 @@ export default function BarDetailScreen({route, navigation}) {
             <Text>{barHours}</Text>
           </View>
         </View>
+
         {/* Live Stream Button */}
         {bar?.liveUrl ? (
-          <Layout style={styles.button} level='1'>
-          <Button onPress={() => setVisible(true)}>
-            Watch Live Stream
-          </Button>
-          
-          <Modal visible={visible}>
-          <Card disabled={true}>
-          <View>
-          <WebView
-            useWebKit={true} 
-            originWhitelist={['*']}
-            style={{flex:1}}
-            javaScriptEnabled={true}
-            source={{uri: safeUrl(bar?.liveUrl)}}
-          />
-          </View>
-          <Button onPress={() => setVisible(false)}> {/* Used to close the url from WebView component */}
-            DISMISS
-          </Button>
-        </Card>
-      </Modal>
-      </Layout>
+          <Layout style={styles.button} level="1">
+            <Button onPress={() => setVisible(true)}>Watch Live Stream</Button>
+
+            <Modal visible={visible}>
+              <Card disabled={true}>
+                <View>
+                  <WebView
+                    useWebKit={true}
+                    originWhitelist={['*']}
+                    style={{flex: 1}}
+                    javaScriptEnabled={true}
+                    source={{uri: safeUrl(bar?.liveUrl)}}
+                  />
+                </View>
+                <Button onPress={() => setVisible(false)}>
+                  {' '}
+                  {/* Used to close the url from WebView component */}
+                  DISMISS
+                </Button>
+              </Card>
+            </Modal>
+          </Layout>
         ) : null}
+
         {/* Uber Button */}
-        {/* Checkin Block */}
+
         {/* Ratings Block */}
         <View style={[styles.floatingBlock, {width: floatingWidth}]}>
           {bar.reviews ? (
@@ -467,6 +577,7 @@ const styles = StyleSheet.create({
   lightText: {
     color: theme['color-basic-200'],
   },
+
   floatingBlock: {
     padding: 16,
     // Android Specific
@@ -487,6 +598,7 @@ const styles = StyleSheet.create({
   button: {
     width: '50%',
     alignSelf: 'center',
+    margin: 10,
   },
   bannerImage: {
     flex: 1,
