@@ -48,6 +48,7 @@
     "react-native-debugger-open": "^0.3.24",
     "react-native-gesture-handler": "~1.6.0",
     "react-native-live-stream": "^1.0.1",
+    "react-native-paper": "^4.2.0",
     "react-native-safe-area-context": "~3.0.7",
     "react-native-screens": "~2.9.0",
     "react-native-svg": "12.1.0",
