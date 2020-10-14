@@ -53,7 +53,7 @@ export function signOut(doAfterSignOut) {
   try {
     auth.signOut()
   } catch (e) {
-    // we dont need to handle this if it fails
+    // we don't need to handle this if it fails
   }
 
   if (typeof doAfterSignOut === 'function') {
