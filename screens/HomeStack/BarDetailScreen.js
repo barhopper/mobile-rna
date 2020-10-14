@@ -254,7 +254,7 @@ export default function BarDetailScreen({route, navigation}) {
         setCarouselImages(imgUrls)
       })
     } else if (!bar.imgUrl || bar.fromFav) {
-      // we can assume if we dont have an imgURl we need to fetch the bar
+      // we can assume if we don't have an imgURl we need to fetch the bar
       if (!isFetching)
         queryCache.refetchQueries(['bar', _bar.id], {force: true})
     }
