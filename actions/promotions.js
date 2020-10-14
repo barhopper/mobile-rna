@@ -37,6 +37,7 @@ export function searchForPromotions(_keys, distance, position, options = {}) {
     .where('timeslot', '==', timeslot.toDate())
 
   const geoQuery = geo
+    .collection('Bars')
     .query(queryRef)
     .within(position, distance, 'position', {units: 'mi'})
 
