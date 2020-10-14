@@ -6,6 +6,7 @@ import {
   ImageBackground,
   ScrollView,
   FlatList,
+  Picker,
   Alert,
 } from 'react-native'
 import {
@@ -18,14 +19,13 @@ import {
   Spinner,
 } from '@ui-kitten/components'
 import {WebView} from 'react-native-webview'
-import {RadioButton} from 'react-native-paper'
 // import {queryCache} from 'react-query'
 import {imageRef} from '../../services/firebase'
 
 import {default as theme} from '../../constants/Theme'
 import {TouchableOpacity} from 'react-native-gesture-handler'
 import {useQuery, queryCache, useMutation} from 'react-query'
-import {getBar} from '../../actions/bars'
+import {getBar, submitCheckin} from '../../actions/bars'
 import {toggleFavorite} from '../../actions/favorites'
 import {useUser} from '../../contexts/userContext'
 
@@ -52,6 +52,9 @@ export default function BarDetailScreen({route, navigation}) {
   const infoItemWidth = width - 60
   const floatingWidth = width - 30
 
+  const checkinValues = Object.values(bar.checkins || {})
+  const [isSubmitting, setIsSubmitting] = useState(false)
+
   const reviewValues = Object.values(bar.reviews || {})
   const reviewTotal =
     reviewValues.reduce((acc, cur) => acc + (cur - 0), 0) - bar.reviews?.count
@@ -60,6 +63,7 @@ export default function BarDetailScreen({route, navigation}) {
 
   const favorites = queryCache.getQueryData(['favorites', userId])
   const favRecord = bar && favorites ? favorites[bar?.id || 'nothing'] : false
+  const [selectedValue, setSelectedValue] = useState('java')
 
   let barHours = 'No Hours'
   if (bar.barOpeningHours && bar.barClosingHours) {
@@ -77,6 +81,36 @@ export default function BarDetailScreen({route, navigation}) {
   )
 
   const showLoader = isFetching && !bar.imgUrl && !bar.barImages
+
+  const handleAddCheckin = () => {
+    if (user.isAnonymous) {
+      return
+    }
+
+    const submission = {
+      barId: route.params.barId,
+    }
+
+    setIsSubmitting(true)
+    submitCheckin({...submission})
+      // eslint-disable-next-line no-unused-vars
+      .then(bar => {
+        navigation.pop()
+        // TODO: Hook this as an update into reactQuery
+      })
+      .catch(err => {
+        console.log(err)
+        Alert.alert('Sorry', err.message || 'Something Went Wrong', [
+          {
+            text: 'OK',
+            onPress: () => navigation.goBack(),
+          },
+        ])
+      })
+      .finally(() => {
+        setIsSubmitting(false)
+      })
+  }
 
   const [mutateFavorites] = useMutation(
     ({userId, bar, favRecord}) => toggleFavorite(userId, bar, favRecord),
@@ -243,8 +277,6 @@ export default function BarDetailScreen({route, navigation}) {
     return _url
   }
   const [visible, setVisible] = React.useState(false)
-  const [value, setValue] = React.useState('first')
-  const [checked, setChecked] = React.useState('first')
 
   if (status === 'error') return null
 
@@ -303,12 +335,35 @@ export default function BarDetailScreen({route, navigation}) {
           </View>
         </ImageBackground>
 
-        <Layout style={styles.button} level="1">
+        <Layout style={styles.buttonCheck} level="1">
           <Button
             onPress={() => setVisible(true)}
-            style={[{backgroundColor: '#299334', borderColor: '#299334'}]}
+            style={[
+              {
+                backgroundColor: '#299334',
+                borderColor: '#299334',
+                width: '100%',
+              },
+            ]}
           >
             Check-In
+          </Button>
+
+          <Button
+            onPress={!isSubmitting ? handleAddCheckin : () => {}}
+            style={[
+              {
+                backgroundColor: '#C42D3E',
+                borderColor: '#C42D3E',
+                width: '100%',
+              },
+            ]}
+          >
+            {isSubmitting ? (
+              <Spinner status="basic" size="small" />
+            ) : (
+              'Check-Out'
+            )}
           </Button>
 
           <Modal visible={visible}>
@@ -318,11 +373,10 @@ export default function BarDetailScreen({route, navigation}) {
                   width: 300,
                   justifyContent: 'center',
                   alignItems: 'center',
-                  height: 20,
                 }}
               >
                 <Text style={{textAlign: 'center', fontWeight: '700'}}>
-                  {`Check-In to ${bar.barName}`}
+                  Check-in to {bar.barName}
                 </Text>
               </View>
 
@@ -330,54 +384,47 @@ export default function BarDetailScreen({route, navigation}) {
                 style={{
                   justifyContent: 'center',
                   alignItems: 'center',
-                  height: 80,
+                  height: 200,
                 }}
               >
                 <Text style={{textAlign: 'center', fontWeight: '700'}}>
                   {`Please Select Gender:`}
                 </Text>
+                <View style={styles.containerPicker}>
+                  <Picker
+                    selectedValue={selectedValue}
+                    style={{width: 150}}
+                    onValueChange={itemValue => setSelectedValue(itemValue)}
+                  >
+                    <Picker.Item label="Male" value="male" />
+                    <Picker.Item label="Female" value="female" />
+                  </Picker>
+                </View>
               </View>
-
-              <RadioButton.Group
-                onValueChange={value => setValue(value)}
-                value={value}
-              >
-                <View style={{justifyContent: 'center', alignItems: 'center'}}>
-                  <Text>Male</Text>
-                  <RadioButton value="Male" />
-                </View>
-                <View style={{justifyContent: 'center', alignItems: 'center'}}>
-                  <Text>Female</Text>
-                  <RadioButton value="Female" />
-                </View>
-              </RadioButton.Group>
-
               <View
                 style={{
                   justifyContent: 'center',
                   alignItems: 'center',
-                  height: 80,
+                  height: 200,
                 }}
               >
                 <Text style={{textAlign: 'center', fontWeight: '700'}}>
                   {`Please Select Status:`}
                 </Text>
+                <View style={styles.containerPicker}>
+                  <Picker
+                    selectedValue={selectedValue}
+                    style={{width: 150}}
+                    onValueChange={itemValue => setSelectedValue(itemValue)}
+                  >
+                    <Picker.Item label="Single" value="single" />
+                    <Picker.Item label="Not Single" value="not single" />
+                  </Picker>
+                </View>
               </View>
 
-              <View>
-                <RadioButton
-                  value="first"
-                  status={checked === 'first' ? 'checked' : 'unchecked'}
-                  onPress={() => setChecked('first')}
-                />
-                <RadioButton
-                  value="second"
-                  status={checked === 'second' ? 'checked' : 'unchecked'}
-                  onPress={() => setChecked('second')}
-                />
-              </View>
               <Button
-                onPress={() => setVisible(false)}
+                onPress={!isSubmitting ? handleAddCheckin : () => {}}
                 style={[
                   {
                     marginTop: 20,
@@ -387,11 +434,12 @@ export default function BarDetailScreen({route, navigation}) {
                   },
                 ]}
               >
-                {' '}
-                {/* Used to close the url from WebView component */}
-                CHECK-IN
+                {isSubmitting ? (
+                  <Spinner status="basic" size="small" />
+                ) : (
+                  'CHECK-IN'
+                )}
               </Button>
-
               <Button onPress={() => setVisible(false)}>
                 {' '}
                 {/* Used to close the url from WebView component */}
@@ -511,6 +559,31 @@ export default function BarDetailScreen({route, navigation}) {
 
         {/* Uber Button */}
 
+        {/* Check-In Block */}
+        <View style={[styles.floatingBlock, {width: floatingWidth}]}>
+          {checkinValues ? (
+            Object.entries(bar.checkins || {}).map(item => {
+              if (item[0] === 'count') return null
+              return (
+                <View key={item} style={{flexDirection: 'row', flex: 0.5}}>
+                  <Text category="p1" style={{fontWeight: 'bold'}}>
+                    {item[0]?.slice(0, 1).toUpperCase()}
+                    {item[0]?.slice(1, item[0].length)}:
+                  </Text>
+                  <Text
+                    style={{color: theme['color-primary-500'], marginLeft: 8}}
+                  >
+                    # Females checked in # single # Males checked in # single
+                    {item[1] && Math.round(item[1])}
+                  </Text>
+                </View>
+              )
+            })
+          ) : (
+            <NoCheckin barName={bar.barName} />
+          )}
+        </View>
+
         {/* Ratings Block */}
         <View style={[styles.floatingBlock, {width: floatingWidth}]}>
           {bar.reviews ? (
@@ -574,6 +647,12 @@ const styles = StyleSheet.create({
     backgroundColor: theme['color-basic-200'],
     paddingVertical: 0,
   },
+
+  containerPicker: {
+    flex: 5,
+    alignItems: 'center',
+  },
+
   lightText: {
     color: theme['color-basic-200'],
   },
@@ -600,6 +679,13 @@ const styles = StyleSheet.create({
     alignSelf: 'center',
     margin: 10,
   },
+
+  buttonCheck: {
+    flexDirection: 'row',
+    width: '50%',
+    marginTop: 10,
+  },
+
   bannerImage: {
     flex: 1,
     height: 200,
@@ -635,6 +721,17 @@ const NoReviews = ({barName}) => {
         category="p1"
         style={{textAlign: 'center'}}
       >{`${barName} has no reviews.\nYou can be the first!`}</Text>
+    </View>
+  )
+}
+
+const NoCheckin = ({barName}) => {
+  return (
+    <View style={{justifyContent: 'center', alignItems: 'center', height: 120}}>
+      <Text
+        category="p1"
+        style={{textAlign: 'center'}}
+      >{`${barName} has no check-ins.`}</Text>
     </View>
   )
 }
