@@ -18,6 +18,24 @@ export function getCategories() {
   })
 }
 
+export function getCheckins() {
+  return new Promise((resolve, reject) => {
+    const data = {}
+    firestore
+      .collection('Checkins')
+      .get()
+      .then(snapshot => {
+        snapshot.forEach(doc => {
+          let key = doc.get('checkins')
+          data[key] = doc.get('gender')
+          data[key] = doc.get('status')
+        })
+        resolve(data)
+      })
+      .catch(reject)
+  })
+}
+
 export function searchForBars(_keys, distance, position) {
   // Lets get the users location
   // console.log('Fetching Bars', distance, position)
@@ -126,4 +144,9 @@ export function getQuestions() {
 export function submitReview(reviewData) {
   const addReview = functions.httpsCallable('addReview')
   return addReview(reviewData).then(console.log)
+}
+
+export function submitCheckin(checkinData) {
+  const addCheckin = functions.httpsCallable('addCheckin')
+  return addCheckin(checkinData).then(console.log)
 }
