@@ -52,7 +52,6 @@ export default function BarDetailScreen({route, navigation}) {
   const infoItemWidth = width - 60
   const floatingWidth = width - 30
 
-  const checkinValues = Object.values(bar.checkins || {})
   const [isSubmitting, setIsSubmitting] = useState(false)
 
   const reviewValues = Object.values(bar.reviews || {})
@@ -561,7 +560,7 @@ export default function BarDetailScreen({route, navigation}) {
 
         {/* Check-In Block */}
         <View style={[styles.floatingBlock, {width: floatingWidth}]}>
-          {checkinValues ? (
+          {bar.checkins ? (
             Object.entries(bar.checkins || {}).map(item => {
               if (item[0] === 'count') return null
               return (
