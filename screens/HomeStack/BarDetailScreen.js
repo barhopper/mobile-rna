@@ -244,6 +244,8 @@ export default function BarDetailScreen({route, navigation}) {
   }
   const [visible, setVisible] = React.useState(false)
   const [value, setValue] = React.useState('first')
+  const [checked, setChecked] = React.useState('first')
+
   if (status === 'error') return null
 
   return (
@@ -362,20 +364,18 @@ export default function BarDetailScreen({route, navigation}) {
                 </Text>
               </View>
 
-              <RadioButton.Group
-                onValueChange={value => setValue(value)}
-                value={value}
-              >
-                <View style={{justifyContent: 'center', alignItems: 'center'}}>
-                  <Text>Single</Text>
-                  <RadioButton value="Male" />
-                </View>
-                <View style={{justifyContent: 'center', alignItems: 'center'}}>
-                  <Text>Not Single</Text>
-                  <RadioButton value="Female" />
-                </View>
-              </RadioButton.Group>
-
+              <View>
+                <RadioButton
+                  value="first"
+                  status={checked === 'first' ? 'checked' : 'unchecked'}
+                  onPress={() => setChecked('first')}
+                />
+                <RadioButton
+                  value="second"
+                  status={checked === 'second' ? 'checked' : 'unchecked'}
+                  onPress={() => setChecked('second')}
+                />
+              </View>
               <Button
                 onPress={() => setVisible(false)}
                 style={[
