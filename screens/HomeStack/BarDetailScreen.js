@@ -6,7 +6,6 @@ import {
   ImageBackground,
   ScrollView,
   FlatList,
-  Picker,
   Alert,
 } from 'react-native'
 import {
@@ -17,6 +16,8 @@ import {
   Icon,
   Button,
   Spinner,
+  Radio,
+  RadioGroup,
 } from '@ui-kitten/components'
 import {WebView} from 'react-native-webview'
 // import {queryCache} from 'react-query'
@@ -62,7 +63,7 @@ export default function BarDetailScreen({route, navigation}) {
 
   const favorites = queryCache.getQueryData(['favorites', userId])
   const favRecord = bar && favorites ? favorites[bar?.id || 'nothing'] : false
-  const [selectedValue, setSelectedValue] = useState('java')
+  const [selectedIndex, setSelectedIndex] = React.useState(0)
 
   let barHours = 'No Hours'
   if (bar.barOpeningHours && bar.barClosingHours) {
@@ -82,6 +83,36 @@ export default function BarDetailScreen({route, navigation}) {
   const showLoader = isFetching && !bar.imgUrl && !bar.barImages
 
   const handleAddCheckin = () => {
+    if (user.isAnonymous) {
+      return
+    }
+
+    const submission = {
+      barId: route.params.barId,
+    }
+
+    setIsSubmitting(true)
+    submitCheckin({...submission})
+      // eslint-disable-next-line no-unused-vars
+      .then(bar => {
+        navigation.pop()
+        // TODO: Hook this as an update into reactQuery
+      })
+      .catch(err => {
+        console.log(err)
+        Alert.alert('Sorry', err.message || 'Something Went Wrong', [
+          {
+            text: 'OK',
+            onPress: () => navigation.goBack(),
+          },
+        ])
+      })
+      .finally(() => {
+        setIsSubmitting(false)
+      })
+  }
+
+  const handleAddCheckout = () => {
     if (user.isAnonymous) {
       return
     }
@@ -254,7 +285,7 @@ export default function BarDetailScreen({route, navigation}) {
         setCarouselImages(imgUrls)
       })
     } else if (!bar.imgUrl || bar.fromFav) {
-      // we can assume if we don't have an imgURl we need to fetch the bar
+      // we can assume if we dont have an imgURl we need to fetch the bar
       if (!isFetching)
         queryCache.refetchQueries(['bar', _bar.id], {force: true})
     }
@@ -339,9 +370,10 @@ export default function BarDetailScreen({route, navigation}) {
             onPress={() => setVisible(true)}
             style={[
               {
+                margin: 10,
                 backgroundColor: '#299334',
                 borderColor: '#299334',
-                width: '100%',
+                width: '90%',
               },
             ]}
           >
@@ -349,12 +381,13 @@ export default function BarDetailScreen({route, navigation}) {
           </Button>
 
           <Button
-            onPress={!isSubmitting ? handleAddCheckin : () => {}}
+            onPress={!isSubmitting ? handleAddCheckout : () => {}}
             style={[
               {
+                margin: 10,
                 backgroundColor: '#C42D3E',
                 borderColor: '#C42D3E',
-                width: '100%',
+                width: '90%',
               },
             ]}
           >
@@ -365,16 +398,23 @@ export default function BarDetailScreen({route, navigation}) {
             )}
           </Button>
 
-          <Modal visible={visible}>
+          <Modal
+            visible={visible}
+            backdropStyle={styles.backdrop}
+            onBackdropPress={() => setVisible(false)}
+          >
             <Card disabled={true}>
               <View
                 style={{
-                  width: 300,
+                  width: '100%',
                   justifyContent: 'center',
                   alignItems: 'center',
                 }}
               >
-                <Text style={{textAlign: 'center', fontWeight: '700'}}>
+                <Text
+                  style={{textAlign: 'center', fontWeight: '700'}}
+                  category="h4"
+                >
                   Check-in to {bar.barName}
                 </Text>
               </View>
@@ -386,47 +426,39 @@ export default function BarDetailScreen({route, navigation}) {
                   height: 200,
                 }}
               >
-                <Text style={{textAlign: 'center', fontWeight: '700'}}>
-                  {`Please Select Gender:`}
-                </Text>
-                <View style={styles.containerPicker}>
-                  <Picker
-                    selectedValue={selectedValue}
-                    style={{width: 150}}
-                    onValueChange={itemValue => setSelectedValue(itemValue)}
-                  >
-                    <Picker.Item label="Male" value="male" />
-                    <Picker.Item label="Female" value="female" />
-                  </Picker>
-                </View>
+                <Text category="h5">{`Please Select Gender:`}</Text>
+
+                <RadioGroup
+                  selectedIndex={selectedIndex}
+                  onChange={index => setSelectedIndex(index)}
+                >
+                  <Radio>Male</Radio>
+                  <Radio>Female</Radio>
+                </RadioGroup>
               </View>
               <View
                 style={{
                   justifyContent: 'center',
                   alignItems: 'center',
-                  height: 200,
+                  height: 50,
                 }}
               >
-                <Text style={{textAlign: 'center', fontWeight: '700'}}>
-                  {`Please Select Status:`}
-                </Text>
-                <View style={styles.containerPicker}>
-                  <Picker
-                    selectedValue={selectedValue}
-                    style={{width: 150}}
-                    onValueChange={itemValue => setSelectedValue(itemValue)}
-                  >
-                    <Picker.Item label="Single" value="single" />
-                    <Picker.Item label="Not Single" value="not single" />
-                  </Picker>
-                </View>
+                <Text category="h5">{`Please Select Status:`}</Text>
+
+                <RadioGroup
+                  selectedIndex={selectedIndex}
+                  onChange={index => setSelectedIndex(index)}
+                >
+                  <Radio>Single</Radio>
+                  <Radio>Not Single</Radio>
+                </RadioGroup>
               </View>
 
               <Button
                 onPress={!isSubmitting ? handleAddCheckin : () => {}}
                 style={[
                   {
-                    marginTop: 20,
+                    marginTop: 50,
                     marginBottom: 20,
                     backgroundColor: '#299334',
                     borderColor: '#299334',
@@ -682,7 +714,7 @@ const styles = StyleSheet.create({
   buttonCheck: {
     flexDirection: 'row',
     width: '50%',
-    marginTop: 10,
+    backgroundColor: theme['color-basic-300'],
   },
 
   bannerImage: {
@@ -710,6 +742,10 @@ const styles = StyleSheet.create({
     minHeight: 26,
     marginVertical: 4,
     marginRight: 14,
+  },
+
+  backdrop: {
+    backgroundColor: 'rgba(0, 0, 0, 0.6)',
   },
 })
 
