@@ -40,6 +40,6 @@ export function searchForPromotions(_keys, distance, position, options = {}) {
     .collection('Bars')
     .query(queryRef)
     .within(position, distance, 'position', {units: 'mi'})
-
+  console.log(get(geoQuery))
   return get(geoQuery)
 }
