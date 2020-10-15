@@ -1,6 +1,27 @@
-import {firestore, geo} from '../services/firebase'
+import {
+  firestore,
+  geo,
+  barsRef,
+  barId,
+  timeslot,
+  promotionRef,
+} from '../services/firebase'
 import {get} from 'geofirex'
 import moment from 'moment'
+
+const promotions = []
+barsRef
+  .doc(barId)
+  .get()
+  .then(snapshot => {
+    promotionRef
+      .doc(snapshot.data().promoId)
+      .where('timeslot', '==', timeslot.toDate())
+      .get()
+      .then(promotion => {
+        promotions.push(promotion)
+      })
+  })
 
 function getCurrentClosestTimeslot(modifier = 0) {
   const time = moment(Date.now())
