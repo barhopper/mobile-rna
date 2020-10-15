@@ -36,7 +36,7 @@ export function searchForPromotions(_keys, distance, position, options = {}) {
     .collection('Promotions')
     .where('timeslot', '==', timeslot.toDate())
 
-  const geoQuery = geo
+  const geoQuery = firestore
     .collection('Bars')
     .query(queryRef)
     .within(position, distance, 'position', {units: 'mi'})
