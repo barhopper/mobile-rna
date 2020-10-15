@@ -1,27 +1,10 @@
-import {
-  firestore,
-  geo,
-  barsRef,
-  barId,
-  timeslot,
-  promotionRef,
-} from '../services/firebase'
+import {firestore, geo} from '../services/firebase'
 import {get} from 'geofirex'
 import moment from 'moment'
+import {barId} from '../actions/bars'
 
-const promotions = []
-barsRef
-  .doc(barId)
-  .get()
-  .then(snapshot => {
-    promotionRef
-      .doc(snapshot.data().promoId)
-      .where('timeslot', '==', timeslot.toDate())
-      .get()
-      .then(promotion => {
-        promotions.push(promotion)
-      })
-  })
+const barsRef = firestore.collection('Bars')
+const promotionRef = firestore.collection('Promotions')
 
 function getCurrentClosestTimeslot(modifier = 0) {
   const time = moment(Date.now())
@@ -64,3 +47,17 @@ export function searchForPromotions(_keys, distance, position, options = {}) {
   console.log(get(geoQuery))
   return get(geoQuery)
 }
+let timeslot = getCurrentClosestTimeslot()
+const promotions = []
+barsRef
+  .doc(barId)
+  .get()
+  .then(snapshot => {
+    promotionRef
+      .doc(snapshot.data().promoId)
+      .where('timeslot', '==', timeslot.toDate())
+      .get()
+      .then(promotion => {
+        promotions.push(promotion)
+      })
+  })
