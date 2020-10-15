@@ -1,4 +1,10 @@
-import {default as React, useLayoutEffect, useState, useEffect} from 'react'
+import {
+  default as React,
+  useLayoutEffect,
+  useState,
+  useEffect,
+  useReducer,
+} from 'react'
 import {
   StyleSheet,
   View,
@@ -30,7 +36,7 @@ import {getBar, submitCheckin} from '../../actions/bars'
 import {toggleFavorite} from '../../actions/favorites'
 import {useUser} from '../../contexts/userContext'
 
-export default function BarDetailScreen({route, navigation}) {
+export default function BarDetailScreen({route, navigation, checkin}) {
   const {bar: _bar} = route.params || {bar: {hitMetadata: {distance: 0}}}
   const {
     hitMetadata: {distance},
@@ -285,7 +291,7 @@ export default function BarDetailScreen({route, navigation}) {
         setCarouselImages(imgUrls)
       })
     } else if (!bar.imgUrl || bar.fromFav) {
-      // we can assume if we dont have an imgURl we need to fetch the bar
+      // we can assume if we don't have an imgURl we need to fetch the bar
       if (!isFetching)
         queryCache.refetchQueries(['bar', _bar.id], {force: true})
     }
@@ -309,6 +315,26 @@ export default function BarDetailScreen({route, navigation}) {
   const [visible, setVisible] = React.useState(false)
 
   if (status === 'error') return null
+
+  const [checkinState, checkinDispatch] = useReducer(
+    checkinInfoReducer,
+    emptyCheckinState,
+    checkinInfoInit,
+  )
+
+  useEffect(() => {
+    checkinDispatch({type: 'reset', payload: checkin || emptyCheckinState})
+  }, [checkin])
+
+  const handleInputChange = event => {
+    checkinDispatch({
+      type: 'update',
+      payload: {
+        name: event.target.name,
+        value: event.target.value,
+      },
+    })
+  }
 
   return (
     <Layout style={styles.container}>
@@ -432,8 +458,26 @@ export default function BarDetailScreen({route, navigation}) {
                   selectedIndex={selectedIndex}
                   onChange={index => setSelectedIndex(index)}
                 >
-                  <Radio>Male</Radio>
-                  <Radio>Female</Radio>
+                  <Radio
+                    style={styles.radio}
+                    label="Male"
+                    name="male"
+                    fullWidth
+                    value={checkinState.male}
+                    onChange={handleInputChange}
+                  >
+                    Male
+                  </Radio>
+                  <Radio
+                    style={styles.radio}
+                    label="Female"
+                    name="female"
+                    fullWidth
+                    value={checkinState.male}
+                    onChange={handleInputChange}
+                  >
+                    Female
+                  </Radio>
                 </RadioGroup>
               </View>
               <View
@@ -444,13 +488,30 @@ export default function BarDetailScreen({route, navigation}) {
                 }}
               >
                 <Text category="h5">{`Please Select Status:`}</Text>
-
                 <RadioGroup
                   selectedIndex={selectedIndex}
                   onChange={index => setSelectedIndex(index)}
                 >
-                  <Radio>Single</Radio>
-                  <Radio>Not Single</Radio>
+                  <Radio
+                    style={styles.radio}
+                    label="Single"
+                    name="single"
+                    fullWidth
+                    value={checkinState.single}
+                    onChange={handleInputChange}
+                  >
+                    Single
+                  </Radio>
+                  <Radio
+                    style={styles.radio}
+                    label="Not Single"
+                    name="notSingle"
+                    fullWidth
+                    value={checkinState.notSingle}
+                    onChange={handleInputChange}
+                  >
+                    Not Single
+                  </Radio>
                 </RadioGroup>
               </View>
 
@@ -567,7 +628,11 @@ export default function BarDetailScreen({route, navigation}) {
           <Layout style={styles.button} level="1">
             <Button onPress={() => setVisible(true)}>Watch Live Stream</Button>
 
-            <Modal visible={visible}>
+            <Modal
+              visible={visible}
+              backdropStyle={styles.backdrop}
+              onBackdropPress={() => setVisible(false)}
+            >
               <Card disabled={true}>
                 <View>
                   <WebView
@@ -604,7 +669,8 @@ export default function BarDetailScreen({route, navigation}) {
                   <Text
                     style={{color: theme['color-primary-500'], marginLeft: 8}}
                   >
-                    # Females checked in # single # Males checked in # single
+                    # Female(s) checked in # single # Male(s) checked in #
+                    single
                     {item[1] && Math.round(item[1])}
                   </Text>
                 </View>
@@ -670,6 +736,39 @@ export default function BarDetailScreen({route, navigation}) {
       </ScrollView>
     </Layout>
   )
+}
+
+const emptyCheckinState = {
+  Male: '',
+  Female: '',
+  Single: [],
+  notSingle: '',
+}
+
+function checkinInfoInit(checkinInfo) {
+  return {
+    original: checkinInfo,
+    ...checkinInfo,
+    hasChanged: false,
+  }
+}
+
+function checkinInfoReducer(state, action) {
+  const {type, payload} = action
+  let hasChanged = false
+  switch (type) {
+    case 'reset':
+      return checkinInfoInit(payload || state.original)
+    case 'update':
+      hasChanged = true
+      return {
+        ...state,
+        [payload.name]: payload.value,
+        hasChanged,
+      }
+    default:
+      return state
+  }
 }
 
 const styles = StyleSheet.create({
@@ -746,6 +845,10 @@ const styles = StyleSheet.create({
 
   backdrop: {
     backgroundColor: 'rgba(0, 0, 0, 0.6)',
+  },
+  radio: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
   },
 })
 
