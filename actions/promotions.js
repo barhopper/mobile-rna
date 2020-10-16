@@ -37,7 +37,6 @@ export function searchForPromotions(_keys, distance, position, options = {}) {
   const promotions = []
   barsRef.get().then(snapshot => {
     promotionRef
-      .doc()
       .doc(snapshot.data().promoId)
       .where('timeslot', '==', timeslot.toDate())
       .get()
