@@ -43,5 +43,6 @@ export function searchForPromotions(_keys, distance, position, options = {}) {
       .then(promotion => {
         promotions.push(promotion)
       })
+    console.log(promotions)
   })
 }
