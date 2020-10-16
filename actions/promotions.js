@@ -1,5 +1,4 @@
 import {firestore, geo} from '../services/firebase'
-import {get} from 'geofirex'
 import moment from 'moment'
 import {barId} from '../actions/bars'
 
@@ -36,28 +35,17 @@ export function searchForPromotions(_keys, distance, position, options = {}) {
 
   let timeslot = getCurrentClosestTimeslot(slotModifier)
 
-  const queryRef = firestore
-    .collection('Promotions')
-    .where('timeslot', '==', timeslot.toDate())
-
-  const geoQuery = firestore
-    .collection('Bars')
-    .query(queryRef)
-    .within(position, distance, 'position', {units: 'mi'})
-  console.log(get(geoQuery))
-  return get(geoQuery)
+  const promotions = []
+  barsRef
+    .doc(barId)
+    .get()
+    .then(snapshot => {
+      promotionRef
+        .doc(snapshot.data().promoId)
+        .where('timeslot', '==', timeslot.toDate())
+        .get()
+        .then(promotion => {
+          promotions.push(promotion)
+        })
+    })
 }
-let timeslot = getCurrentClosestTimeslot()
-const promotions = []
-barsRef
-  .doc(barId)
-  .get()
-  .then(snapshot => {
-    promotionRef
-      .doc(snapshot.data().promoId)
-      .where('timeslot', '==', timeslot.toDate())
-      .get()
-      .then(promotion => {
-        promotions.push(promotion)
-      })
-  })
