@@ -452,7 +452,7 @@ export default function BarDetailScreen({route, navigation, checkin}) {
                   height: 200,
                 }}
               >
-                <Text category="h5">{`Please Select Gender:`}</Text>
+                <Text category="h6">{`Please Select Gender:`}</Text>
 
                 <RadioGroup
                   selectedIndex={selectedIndex}
@@ -468,6 +468,7 @@ export default function BarDetailScreen({route, navigation, checkin}) {
                   >
                     Male
                   </Radio>
+
                   <Radio
                     style={styles.radio}
                     label="Female"
@@ -487,7 +488,7 @@ export default function BarDetailScreen({route, navigation, checkin}) {
                   height: 50,
                 }}
               >
-                <Text category="h5">{`Please Select Status:`}</Text>
+                <Text category="h6">{`Please Select Status:`}</Text>
                 <RadioGroup
                   selectedIndex={selectedIndex}
                   onChange={index => setSelectedIndex(index)}
@@ -662,16 +663,12 @@ export default function BarDetailScreen({route, navigation, checkin}) {
               if (item[0] === 'count') return null
               return (
                 <View key={item} style={{flexDirection: 'row', flex: 0.5}}>
-                  <Text category="p1" style={{fontWeight: 'bold'}}>
-                    {item[0]?.slice(0, 1).toUpperCase()}
-                    {item[0]?.slice(1, item[0].length)}:
-                  </Text>
+                  <Text category="p1" style={{fontWeight: 'bold'}}></Text>
                   <Text
                     style={{color: theme['color-primary-500'], marginLeft: 8}}
                   >
                     # Female(s) checked in # single # Male(s) checked in #
                     single
-                    {item[1] && Math.round(item[1])}
                   </Text>
                 </View>
               )
