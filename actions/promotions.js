@@ -19,7 +19,12 @@ function getCurrentClosestTimeslot(modifier = 0) {
   return time.add(30 * modifier, 'm')
 }
 
-export function searchForPromotions(_keys, distance, position, options = {}) {
+export async function searchForPromotions(
+  _keys,
+  distance,
+  position,
+  options = {},
+) {
   let slotModifier = 0
   // Lets get the users location
   if (!distance || !position) {
@@ -32,17 +37,22 @@ export function searchForPromotions(_keys, distance, position, options = {}) {
 
   position = geo.point(...position)
 
+  // eslint-disable-next-line no-unused-vars
   let timeslot = getCurrentClosestTimeslot(slotModifier)
 
   const promotions = []
-  barsRef.get().then(snapshot => {
-    promotionRef
-      .doc(snapshot.data().promoId)
-      .where('timeslot', '==', timeslot.toDate())
-      .get()
-      .then(promotion => {
-        promotions.push(promotion)
-      })
-    console.log(promotions)
+  let bars = []
+  const snapshot = await barsRef.get()
+  snapshot.forEach(doc => {
+    bars.push(doc.id)
   })
+  await Promise.all(
+    bars.map(async bar => {
+      const promotionsQuery = await promotionRef.where('barId', '==', bar).get()
+      promotionsQuery.forEach(pr => {
+        promotions.push(pr.data())
+      })
+    }),
+  )
+  console.log(promotions)
 }
