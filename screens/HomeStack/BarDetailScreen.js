@@ -738,7 +738,7 @@ export default function BarDetailScreen({route, navigation, checkin}) {
 const emptyCheckinState = {
   Male: '',
   Female: '',
-  Single: [],
+  Single: '',
   notSingle: '',
 }
 

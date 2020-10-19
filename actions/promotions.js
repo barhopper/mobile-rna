@@ -54,5 +54,5 @@ export async function searchForPromotions(
       })
     }),
   )
-  console.log(promotions)
+  return promotions
 }
