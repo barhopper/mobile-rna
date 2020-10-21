@@ -69,7 +69,8 @@ export default function BarDetailScreen({route, navigation, checkin}) {
 
   const favorites = queryCache.getQueryData(['favorites', userId])
   const favRecord = bar && favorites ? favorites[bar?.id || 'nothing'] : false
-  const [selectedIndex, setSelectedIndex] = React.useState(0)
+  const [selectedGender, setSelectedGender] = React.useState(0)
+  const [selectedStatus, setSelectedStatus] = React.useState(0)
 
   let barHours = 'No Hours'
   if (bar.barOpeningHours && bar.barClosingHours) {
@@ -455,8 +456,8 @@ export default function BarDetailScreen({route, navigation, checkin}) {
                 <Text category="h6">{`Please Select Gender:`}</Text>
 
                 <RadioGroup
-                  selectedIndex={selectedIndex}
-                  onChange={index => setSelectedIndex(index)}
+                  selectedIndex={selectedGender}
+                  onChange={index => setSelectedGender(index)}
                 >
                   <Radio
                     style={styles.radio}
@@ -474,7 +475,7 @@ export default function BarDetailScreen({route, navigation, checkin}) {
                     label="Female"
                     name="gender"
                     fullWidth
-                    value={checkinState.male}
+                    value={checkinState.female}
                     onChange={handleInputChange}
                   >
                     Female
@@ -490,8 +491,8 @@ export default function BarDetailScreen({route, navigation, checkin}) {
               >
                 <Text category="h6">{`Please Select Status:`}</Text>
                 <RadioGroup
-                  selectedIndex={selectedIndex}
-                  onChange={index => setSelectedIndex(index)}
+                  selectedIndex={selectedStatus}
+                  onChange={index => setSelectedStatus(index)}
                 >
                   <Radio
                     style={styles.radio}
