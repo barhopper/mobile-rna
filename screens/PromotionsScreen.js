@@ -291,7 +291,11 @@ const PromotionCard = ({
         </Text>
         <Text category="label">{distance && distance.toFixed(2)} Mi.</Text>
       </View>
-      <View style={cardStyles.redbar}></View>
+      <View style={cardStyles.redbar}>
+        <Text category="label" style={{fontWeight: '700', fontSize: 12}}>
+          {bar.promotionDescription}
+        </Text>
+      </View>
       {/* Description */}
     </TouchableOpacity>
   )
