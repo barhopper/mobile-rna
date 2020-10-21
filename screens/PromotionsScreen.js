@@ -293,10 +293,15 @@ const PromotionCard = ({
       </View>
       <View style={cardStyles.redbar}>
         <Text category="label" style={{fontWeight: '700', fontSize: 12}}>
-          {bar.promotionDescription}
+          {bar.promotionName}
         </Text>
       </View>
       {/* Description */}
+      <View style={cardStyles.lightText}>
+        <Text category="label" style={{fontWeight: '700', fontSize: 12}}>
+          {bar.promotionDescription}
+        </Text>
+      </View>
     </TouchableOpacity>
   )
 }
