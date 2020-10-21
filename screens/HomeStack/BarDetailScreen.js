@@ -461,7 +461,7 @@ export default function BarDetailScreen({route, navigation, checkin}) {
                   <Radio
                     style={styles.radio}
                     label="Male"
-                    name="male"
+                    name="gender"
                     fullWidth
                     value={checkinState.male}
                     onChange={handleInputChange}
@@ -472,7 +472,7 @@ export default function BarDetailScreen({route, navigation, checkin}) {
                   <Radio
                     style={styles.radio}
                     label="Female"
-                    name="female"
+                    name="gender"
                     fullWidth
                     value={checkinState.male}
                     onChange={handleInputChange}
@@ -496,7 +496,7 @@ export default function BarDetailScreen({route, navigation, checkin}) {
                   <Radio
                     style={styles.radio}
                     label="Single"
-                    name="single"
+                    name="status"
                     fullWidth
                     value={checkinState.single}
                     onChange={handleInputChange}
@@ -506,7 +506,7 @@ export default function BarDetailScreen({route, navigation, checkin}) {
                   <Radio
                     style={styles.radio}
                     label="Not Single"
-                    name="notSingle"
+                    name="status"
                     fullWidth
                     value={checkinState.notSingle}
                     onChange={handleInputChange}
@@ -642,6 +642,8 @@ export default function BarDetailScreen({route, navigation, checkin}) {
                     style={{flex: 1}}
                     javaScriptEnabled={true}
                     source={{uri: safeUrl(bar?.liveUrl)}}
+                    isLooping
+                    shouldPlay
                   />
                 </View>
                 <Button onPress={() => setVisible(false)}>
@@ -740,9 +742,9 @@ export default function BarDetailScreen({route, navigation, checkin}) {
 }
 
 const emptyCheckinState = {
-  Male: '',
-  Female: '',
-  Single: '',
+  male: '',
+  female: '',
+  single: '',
   notSingle: '',
 }
 
