@@ -67,6 +67,8 @@ export default function BarDetailScreen({route, navigation, checkin}) {
   const avgReview = reviewTotal > 0 && reviewTotal / (reviewValues.length - 1)
   const numStars = avgReview && Math.round(avgReview / 2)
 
+  // const checkinsValues = Object.values(bar.checkins || {})
+
   const favorites = queryCache.getQueryData(['favorites', userId])
   const favRecord = bar && favorites ? favorites[bar?.id || 'nothing'] : false
   const [selectedGender, setSelectedGender] = React.useState(0)
@@ -673,8 +675,6 @@ export default function BarDetailScreen({route, navigation, checkin}) {
                   <Text
                     style={{color: theme['color-primary-500'], marginLeft: 8}}
                   >
-                    # Female(s) checked in # single # Male(s) checked in #
-                    single
                     {item[1] && Math.round(item[1])}
                   </Text>
                 </View>
