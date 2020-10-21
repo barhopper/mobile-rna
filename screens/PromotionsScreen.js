@@ -71,11 +71,13 @@ export default function PromotionScreen({navigation}) {
   }, [navigation])
 
   useEffect(() => {
+    console.log('Data', promotions)
     if (Array.isArray(promotions) && promotions.length > 1) {
       let {timeslot} = promotions[0]
 
       setAllPromotions(current => {
         // prevent any dups from showing up
+
         if (current[current.length - 2]?.title === timeslot.seconds) {
           return current
         }
@@ -263,7 +265,7 @@ const PromotionCard = ({
 
   const {
     hitMetadata: {distance},
-  } = promotion || {hitMetadata: {distance: 0}}
+  } = {hitMetadata: {distance: 0}}
   const bar = {
     id: promotion.barId,
     barName: promotion.barName,
@@ -287,7 +289,7 @@ const PromotionCard = ({
         <Text category="label" style={{fontWeight: 'bold', fontSize: 12}}>
           {bar.barName}
         </Text>
-        <Text category="label">{distance.toFixed(2)} Mi.</Text>
+        <Text category="label">{distance && distance.toFixed(2)} Mi.</Text>
       </View>
       <View style={cardStyles.redbar}></View>
       {/* Description */}
