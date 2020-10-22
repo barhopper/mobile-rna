@@ -67,7 +67,13 @@ export default function BarDetailScreen({route, navigation, checkin}) {
   const avgReview = reviewTotal > 0 && reviewTotal / (reviewValues.length - 1)
   const numStars = avgReview && Math.round(avgReview / 2)
 
-  // const checkinsValues = Object.values(bar.checkins || {})
+  // const maleValues = Object.values(bar.checkins || {})
+  // const maleTotal =
+  //   maleValues.reduce((acc, cur) => acc + (cur - 0), 0) + bar.checkins?.count
+
+  // const femaleValues = Object.values(bar.checkins || {})
+  // const femaleTotal =
+  //   femaleValues.reduce((acc, cur) => acc + (cur - 0), 0) + bar.checkins?.count
 
   const favorites = queryCache.getQueryData(['favorites', userId])
   const favRecord = bar && favorites ? favorites[bar?.id || 'nothing'] : false
@@ -142,7 +148,6 @@ export default function BarDetailScreen({route, navigation, checkin}) {
         Alert.alert('Sorry', err.message || 'Something Went Wrong', [
           {
             text: 'OK',
-            onPress: () => navigation.goBack(),
           },
         ])
       })
@@ -663,26 +668,7 @@ export default function BarDetailScreen({route, navigation, checkin}) {
 
         {/* Check-In Block */}
         <View style={[styles.floatingBlock, {width: floatingWidth}]}>
-          {bar.checkins ? (
-            Object.entries(bar.checkins || {}).map(item => {
-              if (item[0] === 'count') return null
-              return (
-                <View key={item} style={{flexDirection: 'row', flex: 0.5}}>
-                  <Text category="p1" style={{fontWeight: 'bold'}}>
-                    {item[0]?.slice(0, 1).toUpperCase()}
-                    {item[0]?.slice(1, item[0].length)}:
-                  </Text>
-                  <Text
-                    style={{color: theme['color-primary-500'], marginLeft: 8}}
-                  >
-                    {item[1] && Math.round(item[1])}
-                  </Text>
-                </View>
-              )
-            })
-          ) : (
-            <NoCheckin barName={bar.barName} />
-          )}
+          <NoCheckin barName={bar.barName} />
         </View>
 
         {/* Ratings Block */}
