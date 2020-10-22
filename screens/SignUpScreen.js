@@ -26,6 +26,14 @@ export default function SignUpScreen({navigation}) {
       hasUppercase: false,
       hasNumber: false,
     },
+    gender: {
+      male: false,
+      female: false,
+    },
+    status: {
+      single: false,
+      notSingle: false,
+    },
   })
 
   const [email, setEmail] = useState('')
@@ -35,6 +43,14 @@ export default function SignUpScreen({navigation}) {
   const [password, setPassword] = useState('')
   const [passwordError, setPasswordError] = useState(null)
   const clearPasswordError = () => setPasswordError(null)
+
+  // const [gender, setGender] = useState('')
+  // const [genderError, setGenderError] = useState(null)
+  // const clearGenderError = () => setGenderError(null)
+
+  // const [status, setStatus] = useState('')
+  // const [statusError, setStatusError] = useState(null)
+  // const clearStatusError = () => setStatusError(null)
 
   const validEmailIconRef = useRef()
   const passwordLengthIconRef = useRef()
@@ -49,6 +65,8 @@ export default function SignUpScreen({navigation}) {
   const passwordHasLength = validation.password.hasLength
   const passwordHasUppercase = validation.password.hasUppercase
   const passwordHasNumber = validation.password.hasNumber
+  // const [selectedGender, setSelectedGender] = React.useState(0)
+  // const [selectedStatus, setSelectedStatus] = React.useState(0)
 
   const handleEmailChange = value => {
     if (emailError) {
@@ -96,6 +114,18 @@ export default function SignUpScreen({navigation}) {
     })
     setPassword(value)
   }
+
+  // const handleGenderChange = () => {
+  //   if (genderError) {
+  //     clearGenderError(null)
+  //   }
+  // }
+
+  // const handleStatusChange = () => {
+  //   if (statusError) {
+  //     clearStatusError(null)
+  //   }
+  // }
 
   const pushToSignIn = () => {
     navigation.pop()
@@ -250,6 +280,78 @@ export default function SignUpScreen({navigation}) {
               </Text>
             </View>
           </View>
+
+          {/* <View
+                style={{
+                  justifyContent: 'left',
+                  alignItems: 'left',
+                  height: 150,
+                }}
+              >
+              
+                <Text style={[styles.lightText, styles.validationText]}>{`Please Select Gender:`}</Text>
+
+                <RadioGroup
+                  selectedIndex={selectedGender}
+                  onChange={index => setSelectedGender(index)}
+                >
+                  <Radio
+                    style={[styles.lightText, styles.validationText]}
+                    label="Male"
+                    name="gender"
+                    fullWidth
+                    value={gender}
+                    onChange={handleGenderChange}
+                  >
+                    Male
+                  </Radio>
+
+                  <Radio
+                    style={[styles.lightText, styles.validationText]}
+                    label="Female"
+                    name="gender"
+                    fullWidth
+                    value={gender}
+                    onChange={handleGenderChange}
+                  >
+                    Female
+                  </Radio>
+                </RadioGroup>
+              </View>
+              <View
+                style={{
+                  justifyContent: 'left',
+                  alignItems: 'left',
+                  height: 120,
+                }}
+              >
+                <Text style={[styles.lightText, styles.validationText]}>{`Please Select Status:`}</Text>
+                <RadioGroup
+                  selectedIndex={selectedStatus}
+                  onChange={index => setSelectedStatus(index)}
+                >
+                  <Radio
+                    style={[styles.lightText, styles.validationText]}
+                    label="Single"
+                    name="status"
+                    fullWidth
+                    value={status}
+                    onChange={handleStatusChange}
+                  >
+                    Single
+                  </Radio>
+                  <Radio
+                    style={[styles.lightText, styles.validationText]}
+                    label="Not Single"
+                    name="status"
+                    fullWidth
+                    value={status}
+                    onChange={handleStatusChange}
+                  >
+                    Not Single
+                  </Radio>
+                </RadioGroup>
+              </View> */}
 
           <Button
             style={[styles.button, styles.firstButton]}
