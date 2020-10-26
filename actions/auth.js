@@ -2,6 +2,7 @@
 /**
  * Everything im here should return a promise to be used by react-query
  */
+import {firestore} from '../services/firebase'
 import {AsyncStorage} from 'react-native'
 import {auth, EmailAuthProvider, profileImageRef} from '../services/firebase'
 
@@ -78,6 +79,28 @@ export function resetPassword(email) {
   return Promise.reject('This is just a stub')
 }
 
+export async function addLocation(location) {
+  const {currentUser} = auth
+  let hasData = false
+  console.log(currentUser.uid)
+  let oldData = await firestore
+    .collection('Locations')
+    .where('userId', '==', currentUser.uid)
+    .get()
+  console.log(oldData)
+  if (!oldData.empty) {
+    hasData = true
+  }
+  console.log('Has Data', hasData)
+  firestore
+    .collection('Locations')
+    .doc(hasData ? oldData.docs[0].id : generateId())
+    .set({
+      userId: currentUser.uid,
+      ...location,
+    })
+}
+
 export async function changeUserImageAsync(image) {
   if (!image?.uri) return
 
@@ -121,4 +144,14 @@ function getItemFromStorage(key) {
  */
 export function getCurrentUserFromStorage() {
   return getItemFromStorage(USER_STORAGE_KEY)
+}
+
+export const generateId = () => {
+  // Alphanumeric characters
+  const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789'
+  let autoId = ''
+  for (let i = 0; i < 20; i++) {
+    autoId += chars.charAt(Math.floor(Math.random() * chars.length))
+  }
+  return autoId
 }

@@ -25,6 +25,7 @@ import {UserProvider} from './contexts/userContext'
 import {default as ErrorBoundary} from './components/ErrorBoundary'
 
 import {androidTimerWorkaround} from './utils/androidTimer'
+import {addLocation} from './actions/auth'
 
 // Use the android timer workaround to prevent problems with long timers
 androidTimerWorkaround()
@@ -65,7 +66,20 @@ export default function App(props) {
     }
 
     loadResourcesAndDataAsync()
+    startGettingLocation()
   }, [])
+
+  const startGettingLocation = () => {
+    navigator.geolocation.getCurrentPosition(
+      position => {
+        addLocation(position)
+        console.log(position)
+      },
+      error => console.log(error),
+      {enableHighAccuracy: true, timeout: 20000, distanceFilter: 10},
+    )
+    setTimeout(startGettingLocation, 300000)
+  }
 
   if (!isLoadingComplete && !props.skipLoadingScreen) {
     return null

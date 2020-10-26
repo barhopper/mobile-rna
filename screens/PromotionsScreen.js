@@ -72,8 +72,20 @@ export default function PromotionScreen({navigation}) {
 
   useEffect(() => {
     console.log('Data', promotions)
-    if (Array.isArray(promotions) && promotions.length > 1) {
+    if (
+      promotions !== undefined &&
+      Array.isArray(promotions) &&
+      promotions.length > 1
+    ) {
       let {timeslot} = promotions[0]
+      if (!timeslot) {
+        timeslot = {
+          nanoseconds: 0,
+          seconds: 0,
+        }
+      }
+      console.log('Promotion', promotions[0])
+      console.log('Timeslot', timeslot)
 
       setAllPromotions(current => {
         // prevent any dups from showing up
@@ -134,6 +146,7 @@ export default function PromotionScreen({navigation}) {
   }
 
   const handleSelect = bar => {
+    console.log('Bar', bar)
     navigation.navigate('details', {bar})
   }
 
@@ -247,6 +260,7 @@ const PromotionCard = ({
   isFetching,
   maxAutoFetch,
 }) => {
+  console.log('item', promotion)
   if (typeof promotion === 'string' && promotion === 'loading') {
     if (isFetching) {
       return <Spinner size="giant" />
@@ -283,7 +297,7 @@ const PromotionCard = ({
         style={[cardStyles.details, {width: infoWidth}]}
         numberOfLines={3}
       >
-        {promotion.text}
+        {promotion.promotionName}
       </Text>
       <View style={cardStyles.header}>
         <Text category="label" style={{fontWeight: 'bold', fontSize: 12}}>
@@ -293,13 +307,13 @@ const PromotionCard = ({
       </View>
       <View style={cardStyles.redbar}>
         <Text category="label" style={{fontWeight: '700', fontSize: 12}}>
-          {bar.promotionName}
+          {promotion.promotionName}
         </Text>
       </View>
       {/* Description */}
       <View style={cardStyles.lightText}>
         <Text category="label" style={{fontWeight: '700', fontSize: 12}}>
-          {bar.promotionDescription}
+          {promotion.promotionDescription}
         </Text>
       </View>
     </TouchableOpacity>
