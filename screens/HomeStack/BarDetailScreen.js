@@ -32,7 +32,12 @@ import {imageRef} from '../../services/firebase'
 import {default as theme} from '../../constants/Theme'
 import {TouchableOpacity} from 'react-native-gesture-handler'
 import {useQuery, queryCache, useMutation} from 'react-query'
-import {getBar, submitCheckin} from '../../actions/bars'
+import {
+  getBar,
+  getCheckinsForBar,
+  submitCheckin,
+  submitCheckout,
+} from '../../actions/bars'
 import {toggleFavorite} from '../../actions/favorites'
 import {useUser} from '../../contexts/userContext'
 
@@ -52,6 +57,29 @@ export default function BarDetailScreen({route, navigation, checkin}) {
   )
 
   const user = useUser()
+  const [checkins, setCheckins] = useState()
+  getCheckinsForBar(_bar.id).then(data => {
+    setCheckins()
+    if (data.length > 0) {
+      const female = data.filter(d => d.gender.toLowerCase() === 'female')
+      const femaleSingle = female.filter(
+        f => f.status.toLowerCase() === 'single',
+      )
+
+      const male = data.filter(d => d.gender.toLowerCase() === 'male')
+      const maleSingle = male.filter(m => m.status.toLowerCase() === 'single')
+
+      const myCheckin = data.find(d => d.userId == user.uid)
+      console.log(`My Checkin ${myCheckin.id}`)
+      setCheckins({
+        female,
+        femaleSingle,
+        male,
+        maleSingle,
+        myCheckin,
+      })
+    }
+  })
   const userId = user?.uid
 
   const {width} = Dimensions.get('window')
@@ -60,6 +88,7 @@ export default function BarDetailScreen({route, navigation, checkin}) {
   const floatingWidth = width - 30
 
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const [isCheckingOut, setIsCheckingOut] = useState(false)
 
   const reviewValues = Object.values(bar.reviews || {})
   const reviewTotal =
@@ -98,19 +127,28 @@ export default function BarDetailScreen({route, navigation, checkin}) {
   const showLoader = isFetching && !bar.imgUrl && !bar.barImages
 
   const handleAddCheckin = () => {
-    if (user.isAnonymous) {
-      return
-    }
+    // if (user.isAnonymous) {
+    //   return
+    // }
 
     const submission = {
-      barId: route.params.barId,
+      barId: _bar.id,
+      userId: user.uid,
+      gender: selectedGender === 0 ? 'male' : 'female',
+      status: selectedStatus === 0 ? 'single' : 'not single',
     }
 
     setIsSubmitting(true)
     submitCheckin({...submission})
       // eslint-disable-next-line no-unused-vars
       .then(bar => {
-        navigation.pop()
+        Alert.alert('Success', 'Checkin successfull', [
+          {
+            text: 'OK',
+            onPress: () => setVisible(false),
+          },
+        ])
+
         // TODO: Hook this as an update into reactQuery
       })
       .catch(err => {
@@ -118,7 +156,7 @@ export default function BarDetailScreen({route, navigation, checkin}) {
         Alert.alert('Sorry', err.message || 'Something Went Wrong', [
           {
             text: 'OK',
-            onPress: () => navigation.goBack(),
+            onPress: () => setVisible(false),
           },
         ])
       })
@@ -127,21 +165,17 @@ export default function BarDetailScreen({route, navigation, checkin}) {
       })
   }
 
-  const handleAddCheckout = () => {
-    if (user.isAnonymous) {
-      return
-    }
-
-    const submission = {
-      barId: route.params.barId,
-    }
-
-    setIsSubmitting(true)
-    submitCheckin({...submission})
+  const handleCheckout = () => {
+    setIsCheckingOut(true)
+    console.log(checkins)
+    submitCheckout(checkins.myCheckin.id)
       // eslint-disable-next-line no-unused-vars
       .then(bar => {
-        navigation.pop()
-        // TODO: Hook this as an update into reactQuery
+        Alert.alert('Success', 'Checkout successfull', [
+          {
+            text: 'OK',
+          },
+        ])
       })
       .catch(err => {
         console.log(err)
@@ -152,7 +186,7 @@ export default function BarDetailScreen({route, navigation, checkin}) {
         ])
       })
       .finally(() => {
-        setIsSubmitting(false)
+        setIsCheckingOut(false)
       })
   }
 
@@ -400,38 +434,39 @@ export default function BarDetailScreen({route, navigation, checkin}) {
         </ImageBackground>
 
         <Layout style={styles.buttonCheck} level="1">
-          <Button
-            onPress={() => setVisible(true)}
-            style={[
-              {
-                margin: 10,
-                backgroundColor: '#299334',
-                borderColor: '#299334',
-                width: '90%',
-              },
-            ]}
-          >
-            Check-In
-          </Button>
-
-          <Button
-            onPress={!isSubmitting ? handleAddCheckout : () => {}}
-            style={[
-              {
-                margin: 10,
-                backgroundColor: '#C42D3E',
-                borderColor: '#C42D3E',
-                width: '90%',
-              },
-            ]}
-          >
-            {isSubmitting ? (
-              <Spinner status="basic" size="small" />
-            ) : (
-              'Check-Out'
-            )}
-          </Button>
-
+          {checkins && checkins.myCheckin ? (
+            <Button
+              onPress={!isCheckingOut ? handleCheckout : () => {}}
+              style={[
+                {
+                  margin: 10,
+                  backgroundColor: '#C42D3E',
+                  borderColor: '#C42D3E',
+                  width: '100%',
+                },
+              ]}
+            >
+              {isCheckingOut ? (
+                <Spinner status="basic" size="small" />
+              ) : (
+                'Check-Out'
+              )}
+            </Button>
+          ) : (
+            <Button
+              onPress={() => setVisible(true)}
+              style={[
+                {
+                  margin: 10,
+                  backgroundColor: '#299334',
+                  borderColor: '#299334',
+                  width: '100%',
+                },
+              ]}
+            >
+              Check-In
+            </Button>
+          )}
           <Modal
             visible={visible}
             backdropStyle={styles.backdrop}
@@ -668,7 +703,36 @@ export default function BarDetailScreen({route, navigation, checkin}) {
 
         {/* Check-In Block */}
         <View style={[styles.floatingBlock, {width: floatingWidth}]}>
-          <NoCheckin barName={bar.barName} />
+          {checkins ? (
+            <>
+              {checkins.female && checkins.female.length > 0 && (
+                <Text category="p1">
+                  <Text style={{color: theme['color-danger-500']}}>
+                    {checkins.female.length}
+                  </Text>{' '}
+                  Females checked in{' '}
+                  <Text style={{color: theme['color-danger-500']}}>
+                    {checkins.femaleSingle.length}
+                  </Text>{' '}
+                  Singles
+                </Text>
+              )}
+              {checkins.male && checkins.male.length > 0 && (
+                <Text category="p1">
+                  <Text style={{color: theme['color-danger-500']}}>
+                    {checkins.male.length}
+                  </Text>{' '}
+                  Males checked in{' '}
+                  <Text style={{color: theme['color-danger-500']}}>
+                    {checkins.maleSingle.length}
+                  </Text>{' '}
+                  Singles
+                </Text>
+              )}
+            </>
+          ) : (
+            <NoCheckin barName={bar.barName} />
+          )}
         </View>
 
         {/* Ratings Block */}
@@ -802,7 +866,7 @@ const styles = StyleSheet.create({
 
   buttonCheck: {
     flexDirection: 'row',
-    width: '50%',
+    width: '94%',
     backgroundColor: theme['color-basic-300'],
   },
 

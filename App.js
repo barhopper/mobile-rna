@@ -73,9 +73,8 @@ export default function App(props) {
     navigator.geolocation.getCurrentPosition(
       position => {
         addLocation(position)
-        console.log(position)
       },
-      error => console.log(error),
+      error => console.error(error),
       {enableHighAccuracy: true, timeout: 20000, distanceFilter: 10},
     )
     setTimeout(startGettingLocation, 300000)
