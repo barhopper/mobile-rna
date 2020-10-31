@@ -41,6 +41,27 @@ export function getCheckinsForBar(barId) {
   })
 }
 
+export function getMyCheckins(userId) {
+  var m = moment()
+  m.set({hour: 0, minute: 0, second: 0, millisecond: 0})
+  return new Promise((resolve, reject) => {
+    const data = []
+    firestore
+      .collection('Checkins')
+      .where('hasCheckedOut', '==', false)
+      .where('userId', '==', userId)
+      .where('checkedInAt', '>=', m.toISOString())
+      .get()
+      .then(snapshot => {
+        snapshot.forEach(doc => {
+          data.push({...doc.data(), id: doc.id})
+        })
+        resolve(data)
+      })
+      .catch(reject)
+  })
+}
+
 export function getCheckins() {
   return new Promise((resolve, reject) => {
     const data = {}

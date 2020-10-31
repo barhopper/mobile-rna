@@ -61,15 +61,14 @@ export default function BarDetailScreen({route, navigation, checkin}) {
   getCheckinsForBar(_bar.id).then(data => {
     setCheckins()
     if (data.length > 0) {
-      const female = data.filter(d => d.gender.toLowerCase() === 'female')
-      const femaleSingle = female.filter(
-        f => f.status.toLowerCase() === 'single',
-      )
+      const female = data.filter(d => d.gender && d.gender === 'female')
+      const femaleSingle = female.filter(f => f.status && f.status === 'single')
 
-      const male = data.filter(d => d.gender.toLowerCase() === 'male')
-      const maleSingle = male.filter(m => m.status.toLowerCase() === 'single')
+      const male = data.filter(d => d.gender && d.gender === 'male')
+      const maleSingle = male.filter(m => m.status && m.status === 'single')
 
       const myCheckin = data.find(d => d.userId == user.uid)
+      const unknownCheckin = data.length - female.length - male.length
       console.log(`My Checkin ${myCheckin.id}`)
       setCheckins({
         female,
@@ -77,6 +76,7 @@ export default function BarDetailScreen({route, navigation, checkin}) {
         male,
         maleSingle,
         myCheckin,
+        unknownCheckin,
       })
     }
   })
@@ -713,7 +713,7 @@ export default function BarDetailScreen({route, navigation, checkin}) {
                   Females checked in{' '}
                   <Text style={{color: theme['color-danger-500']}}>
                     {checkins.femaleSingle.length}
-                  </Text>{' '}
+                  </Text>
                   Singles
                 </Text>
               )}
@@ -725,8 +725,16 @@ export default function BarDetailScreen({route, navigation, checkin}) {
                   Males checked in{' '}
                   <Text style={{color: theme['color-danger-500']}}>
                     {checkins.maleSingle.length}
-                  </Text>{' '}
+                  </Text>
                   Singles
+                </Text>
+              )}
+              {checkins.unknownCheckin && checkins.unknownCheckin > 0 && (
+                <Text category="p1">
+                  <Text style={{color: theme['color-danger-500']}}>
+                    {checkins.unknownCheckin}
+                  </Text>{' '}
+                  other people checked in.
                 </Text>
               )}
             </>

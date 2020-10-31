@@ -1,5 +1,6 @@
 import {firestore, geo} from '../services/firebase'
 import moment from 'moment'
+import {get} from 'geofirex'
 
 const barsRef = firestore.collection('Bars')
 const promotionRef = firestore.collection('Promotions')
@@ -36,21 +37,33 @@ export async function searchForPromotions(
   }
 
   position = geo.point(...position)
+  console.log('Position', position)
 
   // eslint-disable-next-line no-unused-vars
   let timeslot = getCurrentClosestTimeslot(slotModifier)
+  console.log(timeslot)
 
   const promotions = []
   let bars = []
-  const snapshot = await barsRef.get()
+  const snapshot = await get(
+    geo.query(barsRef).within(position, distance, 'position', {units: 'mi'}),
+  )
   snapshot.forEach(doc => {
-    bars.push(doc.id)
+    console.log('Bar', doc)
+    bars.push(doc)
   })
   await Promise.all(
     bars.map(async bar => {
-      const promotionsQuery = await promotionRef.where('barId', '==', bar).get()
+      const promotionsQuery = await promotionRef
+        .where('barId', '==', bar.id)
+        .get()
       promotionsQuery.forEach(pr => {
-        promotions.push(pr.data())
+        const data = {
+          ...pr.data(),
+          ...bar.hitMetadata,
+        }
+        console.log('promotions', data)
+        promotions.push(data)
       })
     }),
   )

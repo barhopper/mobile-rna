@@ -25,7 +25,13 @@ import {UserProvider} from './contexts/userContext'
 import {default as ErrorBoundary} from './components/ErrorBoundary'
 
 import {androidTimerWorkaround} from './utils/androidTimer'
-import {addLocation} from './actions/auth'
+import {
+  getMyCheckins,
+  searchForBars,
+  submitCheckin,
+  submitCheckout,
+} from './actions/bars'
+import {auth} from './services/firebase'
 
 // Use the android timer workaround to prevent problems with long timers
 androidTimerWorkaround()
@@ -72,12 +78,55 @@ export default function App(props) {
   const startGettingLocation = () => {
     navigator.geolocation.getCurrentPosition(
       position => {
-        addLocation(position)
+        // const { error, status, data, isFetching } = useQuery(
+        //   ['bars', 0.5,],
+        //   searchForBars,
+        // )
+        const {currentUser} = auth
+        if (currentUser) {
+          getMyCheckins(currentUser.uid).then(checkins => {
+            // console.log("Checkins", checkins);
+            let barsNearMe = []
+            searchForBars('bars', 0.5, [
+              position.coords.latitude,
+              position.coords.longitude,
+            ]).then(bars => {
+              console.log('Bars fetching', bars)
+              barsNearMe = bars
+              bars.map(b => {
+                const amICheckedIn = checkins.find(c => c.barId == b.id)
+                if (!amICheckedIn) {
+                  submitCheckin({
+                    barId: b.id,
+                    userId: currentUser.uid,
+                  })
+                }
+              })
+              const checkinsToRemove = []
+              checkins.map(c => {
+                console.log('Checkin : ', c)
+                console.log('Bars near me ', barsNearMe)
+                const isBarNear = barsNearMe.find(b => b.id === c.barId)
+                console.log('IS bar near', isBarNear)
+                if (!isBarNear) {
+                  checkinsToRemove.push(c)
+                }
+              })
+              console.log('Checkins to remove', checkinsToRemove)
+              if (checkinsToRemove.length > 0) {
+                checkinsToRemove.map(cr => {
+                  submitCheckout(cr.id)
+                })
+              }
+            })
+          })
+        }
       },
       error => console.error(error),
       {enableHighAccuracy: true, timeout: 20000, distanceFilter: 10},
     )
-    setTimeout(startGettingLocation, 300000)
+    //300000
+    setTimeout(startGettingLocation, 5000)
   }
 
   if (!isLoadingComplete && !props.skipLoadingScreen) {

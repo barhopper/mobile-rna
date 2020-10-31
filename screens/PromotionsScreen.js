@@ -260,7 +260,6 @@ const PromotionCard = ({
   isFetching,
   maxAutoFetch,
 }) => {
-  console.log('item', promotion)
   if (typeof promotion === 'string' && promotion === 'loading') {
     if (isFetching) {
       return <Spinner size="giant" />
@@ -303,7 +302,9 @@ const PromotionCard = ({
         <Text category="label" style={{fontWeight: 'bold', fontSize: 12}}>
           {bar.barName}
         </Text>
-        <Text category="label">{distance && distance.toFixed(2)} Mi.</Text>
+        <Text category="label">
+          {promotion.distance && promotion.distance.toFixed(2)} Mi.
+        </Text>
       </View>
       <View style={cardStyles.redbar}>
         <Text category="label" style={{fontWeight: '700', fontSize: 12}}>
