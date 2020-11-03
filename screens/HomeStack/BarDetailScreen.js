@@ -1,4 +1,10 @@
-import {default as React, useLayoutEffect, useState, useEffect} from 'react'
+import {
+  default as React,
+  useLayoutEffect,
+  useState,
+  useEffect,
+  useReducer,
+} from 'react'
 import {
   StyleSheet,
   View,
@@ -8,20 +14,34 @@ import {
   FlatList,
   Alert,
 } from 'react-native'
-import {Layout, Card, Modal, Text, Icon, Button, Spinner} from '@ui-kitten/components'
-import { WebView } from 'react-native-webview';
-
+import {
+  Layout,
+  Card,
+  Modal,
+  Text,
+  Icon,
+  Button,
+  Spinner,
+  Radio,
+  RadioGroup,
+} from '@ui-kitten/components'
+import {WebView} from 'react-native-webview'
 // import {queryCache} from 'react-query'
 import {imageRef} from '../../services/firebase'
 
 import {default as theme} from '../../constants/Theme'
 import {TouchableOpacity} from 'react-native-gesture-handler'
 import {useQuery, queryCache, useMutation} from 'react-query'
-import {getBar} from '../../actions/bars'
+import {
+  getBar,
+  getCheckinsForBar,
+  submitCheckin,
+  submitCheckout,
+} from '../../actions/bars'
 import {toggleFavorite} from '../../actions/favorites'
 import {useUser} from '../../contexts/userContext'
 
-export default function BarDetailScreen({route, navigation}) {
+export default function BarDetailScreen({route, navigation, checkin}) {
   const {bar: _bar} = route.params || {bar: {hitMetadata: {distance: 0}}}
   const {
     hitMetadata: {distance},
@@ -37,6 +57,29 @@ export default function BarDetailScreen({route, navigation}) {
   )
 
   const user = useUser()
+  const [checkins, setCheckins] = useState()
+  getCheckinsForBar(_bar.id).then(data => {
+    setCheckins()
+    if (data.length > 0) {
+      const female = data.filter(d => d.gender && d.gender === 'female')
+      const femaleSingle = female.filter(f => f.status && f.status === 'single')
+
+      const male = data.filter(d => d.gender && d.gender === 'male')
+      const maleSingle = male.filter(m => m.status && m.status === 'single')
+
+      const myCheckin = data.find(d => d.userId == user.uid)
+      const unknownCheckin = data.length - female.length - male.length
+      console.log(`My Checkin ${myCheckin.id}`)
+      setCheckins({
+        female,
+        femaleSingle,
+        male,
+        maleSingle,
+        myCheckin,
+        unknownCheckin,
+      })
+    }
+  })
   const userId = user?.uid
 
   const {width} = Dimensions.get('window')
@@ -44,14 +87,27 @@ export default function BarDetailScreen({route, navigation}) {
   const infoItemWidth = width - 60
   const floatingWidth = width - 30
 
+  const [isSubmitting, setIsSubmitting] = useState(false)
+  const [isCheckingOut, setIsCheckingOut] = useState(false)
+
   const reviewValues = Object.values(bar.reviews || {})
   const reviewTotal =
     reviewValues.reduce((acc, cur) => acc + (cur - 0), 0) - bar.reviews?.count
   const avgReview = reviewTotal > 0 && reviewTotal / (reviewValues.length - 1)
   const numStars = avgReview && Math.round(avgReview / 2)
 
+  // const maleValues = Object.values(bar.checkins || {})
+  // const maleTotal =
+  //   maleValues.reduce((acc, cur) => acc + (cur - 0), 0) + bar.checkins?.count
+
+  // const femaleValues = Object.values(bar.checkins || {})
+  // const femaleTotal =
+  //   femaleValues.reduce((acc, cur) => acc + (cur - 0), 0) + bar.checkins?.count
+
   const favorites = queryCache.getQueryData(['favorites', userId])
   const favRecord = bar && favorites ? favorites[bar?.id || 'nothing'] : false
+  const [selectedGender, setSelectedGender] = React.useState(0)
+  const [selectedStatus, setSelectedStatus] = React.useState(0)
 
   let barHours = 'No Hours'
   if (bar.barOpeningHours && bar.barClosingHours) {
@@ -69,6 +125,70 @@ export default function BarDetailScreen({route, navigation}) {
   )
 
   const showLoader = isFetching && !bar.imgUrl && !bar.barImages
+
+  const handleAddCheckin = () => {
+    // if (user.isAnonymous) {
+    //   return
+    // }
+
+    const submission = {
+      barId: _bar.id,
+      userId: user.uid,
+      gender: selectedGender === 0 ? 'male' : 'female',
+      status: selectedStatus === 0 ? 'single' : 'not single',
+    }
+
+    setIsSubmitting(true)
+    submitCheckin({...submission})
+      // eslint-disable-next-line no-unused-vars
+      .then(bar => {
+        Alert.alert('Success', 'Checkin successfull', [
+          {
+            text: 'OK',
+            onPress: () => setVisible(false),
+          },
+        ])
+
+        // TODO: Hook this as an update into reactQuery
+      })
+      .catch(err => {
+        console.log(err)
+        Alert.alert('Sorry', err.message || 'Something Went Wrong', [
+          {
+            text: 'OK',
+            onPress: () => setVisible(false),
+          },
+        ])
+      })
+      .finally(() => {
+        setIsSubmitting(false)
+      })
+  }
+
+  const handleCheckout = () => {
+    setIsCheckingOut(true)
+    console.log(checkins)
+    submitCheckout(checkins.myCheckin.id)
+      // eslint-disable-next-line no-unused-vars
+      .then(bar => {
+        Alert.alert('Success', 'Checkout successfull', [
+          {
+            text: 'OK',
+          },
+        ])
+      })
+      .catch(err => {
+        console.log(err)
+        Alert.alert('Sorry', err.message || 'Something Went Wrong', [
+          {
+            text: 'OK',
+          },
+        ])
+      })
+      .finally(() => {
+        setIsCheckingOut(false)
+      })
+  }
 
   const [mutateFavorites] = useMutation(
     ({userId, bar, favRecord}) => toggleFavorite(userId, bar, favRecord),
@@ -213,7 +333,7 @@ export default function BarDetailScreen({route, navigation}) {
         setCarouselImages(imgUrls)
       })
     } else if (!bar.imgUrl || bar.fromFav) {
-      // we can assume if we dont have an imgURl we need to fetch the bar
+      // we can assume if we don't have an imgURl we need to fetch the bar
       if (!isFetching)
         queryCache.refetchQueries(['bar', _bar.id], {force: true})
     }
@@ -227,16 +347,36 @@ export default function BarDetailScreen({route, navigation}) {
     navigation.navigate('review', {barId: bar.id})
   }
 
- const safeUrl = url => {
+  const safeUrl = url => {
     let _url = ''
     if (!url) return
     _url = typeof url !== 'string' ? url.toString() : url
     _url = _url.match(/http(s)?:\/\//) ? _url : `https://${_url}`
     return _url
-}
-  const [visible, setVisible] = React.useState(false);
+  }
+  const [visible, setVisible] = React.useState(false)
 
   if (status === 'error') return null
+
+  const [checkinState, checkinDispatch] = useReducer(
+    checkinInfoReducer,
+    emptyCheckinState,
+    checkinInfoInit,
+  )
+
+  useEffect(() => {
+    checkinDispatch({type: 'reset', payload: checkin || emptyCheckinState})
+  }, [checkin])
+
+  const handleInputChange = event => {
+    checkinDispatch({
+      type: 'update',
+      payload: {
+        name: event.target.name,
+        value: event.target.value,
+      },
+    })
+  }
 
   return (
     <Layout style={styles.container}>
@@ -292,6 +432,158 @@ export default function BarDetailScreen({route, navigation}) {
             )}
           </View>
         </ImageBackground>
+
+        <Layout style={styles.buttonCheck} level="1">
+          {checkins && checkins.myCheckin ? (
+            <Button
+              onPress={!isCheckingOut ? handleCheckout : () => {}}
+              style={[
+                {
+                  margin: 10,
+                  backgroundColor: '#C42D3E',
+                  borderColor: '#C42D3E',
+                  width: '100%',
+                },
+              ]}
+            >
+              {isCheckingOut ? (
+                <Spinner status="basic" size="small" />
+              ) : (
+                'Check-Out'
+              )}
+            </Button>
+          ) : (
+            <Button
+              onPress={() => setVisible(true)}
+              style={[
+                {
+                  margin: 10,
+                  backgroundColor: '#299334',
+                  borderColor: '#299334',
+                  width: '100%',
+                },
+              ]}
+            >
+              Check-In
+            </Button>
+          )}
+          <Modal
+            visible={visible}
+            backdropStyle={styles.backdrop}
+            onBackdropPress={() => setVisible(false)}
+          >
+            <Card disabled={true}>
+              <View
+                style={{
+                  width: '100%',
+                  justifyContent: 'center',
+                  alignItems: 'center',
+                }}
+              >
+                <Text
+                  style={{textAlign: 'center', fontWeight: '700'}}
+                  category="h4"
+                >
+                  Check-in to {bar.barName}
+                </Text>
+              </View>
+
+              <View
+                style={{
+                  justifyContent: 'center',
+                  alignItems: 'center',
+                  height: 200,
+                }}
+              >
+                <Text category="h6">{`Please Select Gender:`}</Text>
+
+                <RadioGroup
+                  selectedIndex={selectedGender}
+                  onChange={index => setSelectedGender(index)}
+                >
+                  <Radio
+                    style={styles.radio}
+                    label="Male"
+                    name="gender"
+                    fullWidth
+                    value={checkinState.male}
+                    onChange={handleInputChange}
+                  >
+                    Male
+                  </Radio>
+
+                  <Radio
+                    style={styles.radio}
+                    label="Female"
+                    name="gender"
+                    fullWidth
+                    value={checkinState.female}
+                    onChange={handleInputChange}
+                  >
+                    Female
+                  </Radio>
+                </RadioGroup>
+              </View>
+              <View
+                style={{
+                  justifyContent: 'center',
+                  alignItems: 'center',
+                  height: 50,
+                }}
+              >
+                <Text category="h6">{`Please Select Status:`}</Text>
+                <RadioGroup
+                  selectedIndex={selectedStatus}
+                  onChange={index => setSelectedStatus(index)}
+                >
+                  <Radio
+                    style={styles.radio}
+                    label="Single"
+                    name="status"
+                    fullWidth
+                    value={checkinState.single}
+                    onChange={handleInputChange}
+                  >
+                    Single
+                  </Radio>
+                  <Radio
+                    style={styles.radio}
+                    label="Not Single"
+                    name="status"
+                    fullWidth
+                    value={checkinState.notSingle}
+                    onChange={handleInputChange}
+                  >
+                    Not Single
+                  </Radio>
+                </RadioGroup>
+              </View>
+
+              <Button
+                onPress={!isSubmitting ? handleAddCheckin : () => {}}
+                style={[
+                  {
+                    marginTop: 50,
+                    marginBottom: 20,
+                    backgroundColor: '#299334',
+                    borderColor: '#299334',
+                  },
+                ]}
+              >
+                {isSubmitting ? (
+                  <Spinner status="basic" size="small" />
+                ) : (
+                  'CHECK-IN'
+                )}
+              </Button>
+              <Button onPress={() => setVisible(false)}>
+                {' '}
+                {/* Used to close the url from WebView component */}
+                SKIP
+              </Button>
+            </Card>
+          </Modal>
+        </Layout>
 
         {/* Info block with quick data points */}
         <View style={styles.infoBlock}>
@@ -374,33 +666,83 @@ export default function BarDetailScreen({route, navigation}) {
             <Text>{barHours}</Text>
           </View>
         </View>
+
         {/* Live Stream Button */}
         {bar?.liveUrl ? (
-          <Layout style={styles.button} level='1'>
-          <Button onPress={() => setVisible(true)}>
-            Watch Live Stream
-          </Button>
-          
-          <Modal visible={visible}>
-          <Card disabled={true}>
-          <View>
-          <WebView
-            useWebKit={true} 
-            originWhitelist={['*']}
-            style={{flex:1}}
-            javaScriptEnabled={true}
-            source={{uri: safeUrl(bar?.liveUrl)}}
-          />
-          </View>
-          <Button onPress={() => setVisible(false)}> {/* Used to close the url from WebView component */}
-            DISMISS
-          </Button>
-        </Card>
-      </Modal>
-      </Layout>
+          <Layout style={styles.button} level="1">
+            <Button onPress={() => setVisible(true)}>Watch Live Stream</Button>
+
+            <Modal
+              visible={visible}
+              backdropStyle={styles.backdrop}
+              onBackdropPress={() => setVisible(false)}
+            >
+              <Card disabled={true}>
+                <View>
+                  <WebView
+                    useWebKit={true}
+                    originWhitelist={['*']}
+                    style={{flex: 1}}
+                    javaScriptEnabled={true}
+                    source={{uri: safeUrl(bar?.liveUrl)}}
+                    isLooping
+                    shouldPlay
+                  />
+                </View>
+                <Button onPress={() => setVisible(false)}>
+                  {' '}
+                  {/* Used to close the url from WebView component */}
+                  DISMISS
+                </Button>
+              </Card>
+            </Modal>
+          </Layout>
         ) : null}
+
         {/* Uber Button */}
-        {/* Checkin Block */}
+
+        {/* Check-In Block */}
+        <View style={[styles.floatingBlock, {width: floatingWidth}]}>
+          {checkins ? (
+            <>
+              {checkins.female && checkins.female.length > 0 && (
+                <Text category="p1">
+                  <Text style={{color: theme['color-danger-500']}}>
+                    {checkins.female.length}
+                  </Text>{' '}
+                  Females checked in{' '}
+                  <Text style={{color: theme['color-danger-500']}}>
+                    {checkins.femaleSingle.length}
+                  </Text>
+                  Singles
+                </Text>
+              )}
+              {checkins.male && checkins.male.length > 0 && (
+                <Text category="p1">
+                  <Text style={{color: theme['color-danger-500']}}>
+                    {checkins.male.length}
+                  </Text>{' '}
+                  Males checked in{' '}
+                  <Text style={{color: theme['color-danger-500']}}>
+                    {checkins.maleSingle.length}
+                  </Text>
+                  Singles
+                </Text>
+              )}
+              {checkins.unknownCheckin && checkins.unknownCheckin > 0 && (
+                <Text category="p1">
+                  <Text style={{color: theme['color-danger-500']}}>
+                    {checkins.unknownCheckin}
+                  </Text>{' '}
+                  other people checked in.
+                </Text>
+              )}
+            </>
+          ) : (
+            <NoCheckin barName={bar.barName} />
+          )}
+        </View>
+
         {/* Ratings Block */}
         <View style={[styles.floatingBlock, {width: floatingWidth}]}>
           {bar.reviews ? (
@@ -458,15 +800,55 @@ export default function BarDetailScreen({route, navigation}) {
   )
 }
 
+const emptyCheckinState = {
+  male: '',
+  female: '',
+  single: '',
+  notSingle: '',
+}
+
+function checkinInfoInit(checkinInfo) {
+  return {
+    original: checkinInfo,
+    ...checkinInfo,
+    hasChanged: false,
+  }
+}
+
+function checkinInfoReducer(state, action) {
+  const {type, payload} = action
+  let hasChanged = false
+  switch (type) {
+    case 'reset':
+      return checkinInfoInit(payload || state.original)
+    case 'update':
+      hasChanged = true
+      return {
+        ...state,
+        [payload.name]: payload.value,
+        hasChanged,
+      }
+    default:
+      return state
+  }
+}
+
 const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: theme['color-basic-200'],
     paddingVertical: 0,
   },
+
+  containerPicker: {
+    flex: 5,
+    alignItems: 'center',
+  },
+
   lightText: {
     color: theme['color-basic-200'],
   },
+
   floatingBlock: {
     padding: 16,
     // Android Specific
@@ -487,7 +869,15 @@ const styles = StyleSheet.create({
   button: {
     width: '50%',
     alignSelf: 'center',
+    margin: 10,
   },
+
+  buttonCheck: {
+    flexDirection: 'row',
+    width: '94%',
+    backgroundColor: theme['color-basic-300'],
+  },
+
   bannerImage: {
     flex: 1,
     height: 200,
@@ -514,6 +904,14 @@ const styles = StyleSheet.create({
     marginVertical: 4,
     marginRight: 14,
   },
+
+  backdrop: {
+    backgroundColor: 'rgba(0, 0, 0, 0.6)',
+  },
+  radio: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+  },
 })
 
 const NoReviews = ({barName}) => {
@@ -523,6 +921,17 @@ const NoReviews = ({barName}) => {
         category="p1"
         style={{textAlign: 'center'}}
       >{`${barName} has no reviews.\nYou can be the first!`}</Text>
+    </View>
+  )
+}
+
+const NoCheckin = ({barName}) => {
+  return (
+    <View style={{justifyContent: 'center', alignItems: 'center', height: 120}}>
+      <Text
+        category="p1"
+        style={{textAlign: 'center'}}
+      >{`${barName} has no check-ins.`}</Text>
     </View>
   )
 }

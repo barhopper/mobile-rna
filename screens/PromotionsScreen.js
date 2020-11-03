@@ -71,11 +71,25 @@ export default function PromotionScreen({navigation}) {
   }, [navigation])
 
   useEffect(() => {
-    if (Array.isArray(promotions) && promotions.length > 1) {
+    console.log('Data', promotions)
+    if (
+      promotions !== undefined &&
+      Array.isArray(promotions) &&
+      promotions.length > 1
+    ) {
       let {timeslot} = promotions[0]
+      if (!timeslot) {
+        timeslot = {
+          nanoseconds: 0,
+          seconds: 0,
+        }
+      }
+      console.log('Promotion', promotions[0])
+      console.log('Timeslot', timeslot)
 
       setAllPromotions(current => {
         // prevent any dups from showing up
+
         if (current[current.length - 2]?.title === timeslot.seconds) {
           return current
         }
@@ -132,6 +146,7 @@ export default function PromotionScreen({navigation}) {
   }
 
   const handleSelect = bar => {
+    console.log('Bar', bar)
     navigation.navigate('details', {bar})
   }
 
@@ -263,7 +278,7 @@ const PromotionCard = ({
 
   const {
     hitMetadata: {distance},
-  } = promotion || {hitMetadata: {distance: 0}}
+  } = {hitMetadata: {distance: 0}}
   const bar = {
     id: promotion.barId,
     barName: promotion.barName,
@@ -281,16 +296,27 @@ const PromotionCard = ({
         style={[cardStyles.details, {width: infoWidth}]}
         numberOfLines={3}
       >
-        {promotion.text}
+        {promotion.promotionName}
       </Text>
       <View style={cardStyles.header}>
         <Text category="label" style={{fontWeight: 'bold', fontSize: 12}}>
           {bar.barName}
         </Text>
-        <Text category="label">{distance.toFixed(2)} Mi.</Text>
+        <Text category="label">
+          {promotion.distance && promotion.distance.toFixed(2)} Mi.
+        </Text>
       </View>
-      <View style={cardStyles.redbar}></View>
+      <View style={cardStyles.redbar}>
+        <Text category="label" style={{fontWeight: '700', fontSize: 12}}>
+          {promotion.promotionName}
+        </Text>
+      </View>
       {/* Description */}
+      <View style={cardStyles.lightText}>
+        <Text category="label" style={{fontWeight: '700', fontSize: 12}}>
+          {promotion.promotionDescription}
+        </Text>
+      </View>
     </TouchableOpacity>
   )
 }

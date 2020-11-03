@@ -1,5 +1,7 @@
 import {firestore, imageRef, geo, functions} from '../services/firebase'
 import {get} from 'geofirex'
+import {generateId} from './auth'
+import moment from 'moment'
 
 export function getCategories() {
   return new Promise((resolve, reject) => {
@@ -11,6 +13,66 @@ export function getCategories() {
         snapshot.forEach(doc => {
           let key = doc.get('categoryName')
           data[key] = doc.get('subcategories')
+        })
+        resolve(data)
+      })
+      .catch(reject)
+  })
+}
+
+export function getCheckinsForBar(barId) {
+  var m = moment()
+  m.set({hour: 0, minute: 0, second: 0, millisecond: 0})
+  return new Promise((resolve, reject) => {
+    const data = []
+    firestore
+      .collection('Checkins')
+      .where('hasCheckedOut', '==', false)
+      .where('barId', '==', barId)
+      .where('checkedInAt', '>=', m.toISOString())
+      .get()
+      .then(snapshot => {
+        snapshot.forEach(doc => {
+          data.push({...doc.data(), id: doc.id})
+        })
+        resolve(data)
+      })
+      .catch(reject)
+  })
+}
+
+export function getMyCheckins(userId) {
+  var m = moment()
+  m.set({hour: 0, minute: 0, second: 0, millisecond: 0})
+  return new Promise((resolve, reject) => {
+    const data = []
+    firestore
+      .collection('Checkins')
+      .where('hasCheckedOut', '==', false)
+      .where('userId', '==', userId)
+      .where('checkedInAt', '>=', m.toISOString())
+      .get()
+      .then(snapshot => {
+        snapshot.forEach(doc => {
+          data.push({...doc.data(), id: doc.id})
+        })
+        resolve(data)
+      })
+      .catch(reject)
+  })
+}
+
+export function getCheckins() {
+  return new Promise((resolve, reject) => {
+    const data = {}
+    firestore
+      .collection('Checkins')
+      .get()
+      .then(snapshot => {
+        snapshot.forEach(doc => {
+          let key = doc.get('checkins')
+          data[key] = doc.get('gender')
+          data[key] = doc.get('status')
         })
         resolve(data)
       })
@@ -126,4 +188,33 @@ export function getQuestions() {
 export function submitReview(reviewData) {
   const addReview = functions.httpsCallable('addReview')
   return addReview(reviewData).then(console.log)
+}
+
+export function submitCheckin(checkinData) {
+  return new Promise((resolve, reject) => {
+    firestore
+      .collection('Checkins')
+      .doc(generateId())
+      .set({
+        ...checkinData,
+        checkedInAt: moment().toISOString(),
+        hasCheckedOut: false,
+      })
+      .then(data => {
+        resolve(data)
+      })
+      .catch(err => {
+        reject(err)
+      })
+  })
+}
+
+export function submitCheckout(id) {
+  var m = moment()
+  m.set({hour: 0, minute: 0, second: 0, millisecond: 0})
+  console.log(`Checking out ${id}`)
+  return firestore.collection('Checkins').doc(id).update({
+    checkedOutAt: moment().toISOString(),
+    hasCheckedOut: true,
+  })
 }

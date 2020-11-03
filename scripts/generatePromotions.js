@@ -125,7 +125,7 @@ function getRandomTime(options = {withNeg: false}) {
 }
 
 // This is a copy o the id generation function from the firestore source
-const generateId = () => {
+export const generateId = () => {
   // Alphanumeric characters
   const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789'
   let autoId = ''
