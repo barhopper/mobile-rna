@@ -352,9 +352,12 @@ export default function BarDetailScreen({route, navigation, checkin}) {
     if (!url) return
     _url = typeof url !== 'string' ? url.toString() : url
     _url = _url.match(/http(s)?:\/\//) ? _url : `https://${_url}`
-    return _url
+    _url = _url.replace('watch?v=', 'embed/')
+    console.log(_url)
+    return _url + '?rel=0&autoplay=1&showinfo=0&controls=0'
   }
   const [visible, setVisible] = React.useState(false)
+  const [liveStreamVisible, setLiveStreamVisible] = React.useState(false)
 
   if (status === 'error') return null
 
@@ -670,26 +673,29 @@ export default function BarDetailScreen({route, navigation, checkin}) {
         {/* Live Stream Button */}
         {bar?.liveUrl ? (
           <Layout style={styles.button} level="1">
-            <Button onPress={() => setVisible(true)}>Watch Live Stream</Button>
+            <Button onPress={() => setLiveStreamVisible(true)}>
+              Watch Live Stream
+            </Button>
 
             <Modal
-              visible={visible}
+              visible={liveStreamVisible}
               backdropStyle={styles.backdrop}
-              onBackdropPress={() => setVisible(false)}
+              onBackdropPress={() => setLiveStreamVisible(false)}
             >
               <Card disabled={true}>
                 <View>
                   <WebView
-                    useWebKit={true}
+                    style={{width: 280, height: 480}}
+                    // useWebKit={true}
                     originWhitelist={['*']}
-                    style={{flex: 1}}
+                    // style={{ flex: 1 }}
                     javaScriptEnabled={true}
                     source={{uri: safeUrl(bar?.liveUrl)}}
                     isLooping
                     shouldPlay
                   />
                 </View>
-                <Button onPress={() => setVisible(false)}>
+                <Button onPress={() => setLiveStreamVisible(false)}>
                   {' '}
                   {/* Used to close the url from WebView component */}
                   DISMISS

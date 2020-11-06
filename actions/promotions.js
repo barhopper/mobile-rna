@@ -46,7 +46,7 @@ export async function searchForPromotions(
   const promotions = []
   let bars = []
   const snapshot = await get(
-    geo.query(barsRef).within(position, distance, 'position', {units: 'mi'}),
+    geo.query(barsRef).within(position, 3000, 'position', {units: 'mi'}),
   )
   snapshot.forEach(doc => {
     console.log('Bar', doc)
