@@ -41,7 +41,7 @@ export async function searchForPromotions(
 
   // eslint-disable-next-line no-unused-vars
   let timeslot = getCurrentClosestTimeslot(slotModifier)
-  console.log(timeslot)
+  console.log('TimeSlot', timeslot)
 
   const promotions = []
   let bars = []
@@ -54,6 +54,7 @@ export async function searchForPromotions(
   })
   await Promise.all(
     bars.map(async bar => {
+      console.log('BarId', bar.id)
       const promotionsQuery = await promotionRef
         .where('barId', '==', bar.id)
         .get()
@@ -67,5 +68,25 @@ export async function searchForPromotions(
       })
     }),
   )
-  return promotions
+  console.log('Promotions', promotions)
+  return promotions.filter(p => {
+    console.log('Promotion', p)
+    const start = moment(
+      p.promotionDays + ' ' + p.promotionStartingHours + '+0000',
+    )
+    console.log('start', start)
+    const nowString =
+      moment().format('YYYY-MM-DD') + ' ' + moment().format('HH:mm') + '+0000'
+    console.log(nowString)
+    const now = moment(nowString)
+    console.log('now', now)
+    const end = moment(p.promotionDays + ' ' + p.promotionEndingHours + '+0000')
+    console.log('end', end)
+
+    console.log('started', now.isAfter(start))
+    console.log('ended', end.isAfter(now))
+    const filter = now.isAfter(start) && end.isAfter(now)
+    console.log('Filter', filter)
+    return filter
+  })
 }

@@ -1,21 +1,18 @@
-import {default as React, useState, useRef, useEffect} from 'react'
+import {Button, Layout, Spinner, Text} from '@ui-kitten/components'
+import {default as React, useEffect, useRef, useState} from 'react'
 import {
-  StyleSheet,
-  View,
-  TouchableOpacity,
-  Slider,
   Dimensions,
   SectionList,
+  Slider,
+  StyleSheet,
+  TouchableOpacity,
+  View,
 } from 'react-native'
-import {Layout, Text, Spinner, Button} from '@ui-kitten/components'
-
-import {default as theme} from '../constants/Theme'
 import {useQuery} from 'react-query'
 import {searchForPromotions} from '../actions/promotions'
-import {watchLocationWithPermission} from '../utils/permissions'
+import {default as theme} from '../constants/Theme'
 import {geo} from '../services/firebase'
-
-import moment from 'moment'
+import {watchLocationWithPermission} from '../utils/permissions'
 
 /***********************************************************
  *
@@ -25,12 +22,12 @@ import moment from 'moment'
  *
  ***********************************************************/
 
-function getTimeStringFromUTCEpoch(seconds) {
-  var d = new Date(0) // The 0 there is the key, which sets the date to the epoch
-  d.setUTCSeconds(seconds) // add the seconds since utc epoch
-  let timeString = moment(d).format('hh:mm')
-  return timeString
-}
+// function getTimeStringFromUTCEpoch(seconds) {
+//   var d = new Date(0) // The 0 there is the key, which sets the date to the epoch
+//   d.setUTCSeconds(seconds) // add the seconds since utc epoch
+//   let timeString = moment(d).format('hh:mm')
+//   return timeString
+// }
 
 export default function PromotionScreen({navigation}) {
   const [distance, setDistance] = useState(3)
@@ -71,11 +68,11 @@ export default function PromotionScreen({navigation}) {
   }, [navigation])
 
   useEffect(() => {
-    console.log('Data', promotions)
+    console.log('Data - ', promotions)
     if (
       promotions !== undefined &&
       Array.isArray(promotions) &&
-      promotions.length > 1
+      promotions.length > 0
     ) {
       let {timeslot} = promotions[0]
       if (!timeslot) {
@@ -197,7 +194,7 @@ export default function PromotionScreen({navigation}) {
                 key={title}
                 onChange={() => setSlotModifier(current => current + 1)}
               >
-                <Text category="h4">{getTimeStringFromUTCEpoch(title)}</Text>
+                {/* <Text category="h4">{getTimeStringFromUTCEpoch(title)}</Text> */}
               </InViewPort>
             )
           }}

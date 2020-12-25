@@ -1,3 +1,5 @@
+import 'expo-firestore-offline-persistence'
+
 import * as firebase from 'firebase'
 import * as geofirex from 'geofirex'
 
@@ -24,6 +26,7 @@ export const auth = firebase.auth()
 
 export const firestore = firebase.firestore()
 
+firestore.enablePersistence()
 export const storage = firebase.storage()
 export const imageRef = storage.ref('images/')
 export const profileImageRef = storage.ref('profileImages/')

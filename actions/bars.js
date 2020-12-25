@@ -140,6 +140,7 @@ export function searchForBars(_keys, distance, position) {
 
 export async function getBar(_key, barId) {
   try {
+    console.log('BarId', barId)
     const barSnapshot = await firestore.collection('Bars').doc(barId).get()
 
     if (barSnapshot.exists) {

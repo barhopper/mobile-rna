@@ -1,37 +1,33 @@
 import {
-  default as React,
-  useLayoutEffect,
-  useState,
-  useEffect,
-  useReducer,
-} from 'react'
-import {
-  StyleSheet,
-  View,
-  Dimensions,
-  ImageBackground,
-  ScrollView,
-  FlatList,
-  Alert,
-} from 'react-native'
-import {
-  Layout,
-  Card,
-  Modal,
-  Text,
-  Icon,
   Button,
-  Spinner,
+  Card,
+  Icon,
+  Layout,
+  Modal,
   Radio,
   RadioGroup,
+  Spinner,
+  Text,
 } from '@ui-kitten/components'
-import {WebView} from 'react-native-webview'
-// import {queryCache} from 'react-query'
-import {imageRef} from '../../services/firebase'
-
-import {default as theme} from '../../constants/Theme'
+import {
+  default as React,
+  useEffect,
+  useLayoutEffect,
+  useReducer,
+  useState,
+} from 'react'
+import {
+  Alert,
+  Dimensions,
+  FlatList,
+  ImageBackground,
+  ScrollView,
+  StyleSheet,
+  View,
+} from 'react-native'
 import {TouchableOpacity} from 'react-native-gesture-handler'
-import {useQuery, queryCache, useMutation} from 'react-query'
+import {WebView} from 'react-native-webview'
+import {queryCache, useMutation, useQuery} from 'react-query'
 import {
   getBar,
   getCheckinsForBar,
@@ -39,14 +35,19 @@ import {
   submitCheckout,
 } from '../../actions/bars'
 import {toggleFavorite} from '../../actions/favorites'
+import {default as theme} from '../../constants/Theme'
 import {useUser} from '../../contexts/userContext'
+// import {queryCache} from 'react-query'
+import {imageRef} from '../../services/firebase'
 
 export default function BarDetailScreen({route, navigation, checkin}) {
   const {bar: _bar} = route.params || {bar: {hitMetadata: {distance: 0}}}
+  let {showCheckin} = route.params
   const {
     hitMetadata: {distance},
   } = _bar?.hitMetadata ? _bar : {hitMetadata: {distance: 0}}
 
+  console.log('Show Checkin', showCheckin)
   // eslint-disable-next-line no-unused-vars
   const {error, status, data: bar, isFetching} = useQuery(
     ['bar', _bar.id],
@@ -58,28 +59,7 @@ export default function BarDetailScreen({route, navigation, checkin}) {
 
   const user = useUser()
   const [checkins, setCheckins] = useState()
-  getCheckinsForBar(_bar.id).then(data => {
-    setCheckins()
-    if (data.length > 0) {
-      const female = data.filter(d => d.gender && d.gender === 'female')
-      const femaleSingle = female.filter(f => f.status && f.status === 'single')
 
-      const male = data.filter(d => d.gender && d.gender === 'male')
-      const maleSingle = male.filter(m => m.status && m.status === 'single')
-
-      const myCheckin = data.find(d => d.userId == user.uid)
-      const unknownCheckin = data.length - female.length - male.length
-      console.log(`My Checkin ${myCheckin.id}`)
-      setCheckins({
-        female,
-        femaleSingle,
-        male,
-        maleSingle,
-        myCheckin,
-        unknownCheckin,
-      })
-    }
-  })
   const userId = user?.uid
 
   const {width} = Dimensions.get('window')
@@ -162,12 +142,12 @@ export default function BarDetailScreen({route, navigation, checkin}) {
       })
       .finally(() => {
         setIsSubmitting(false)
+        getCheckinsForBarLayout()
       })
   }
 
   const handleCheckout = () => {
     setIsCheckingOut(true)
-    console.log(checkins)
     submitCheckout(checkins.myCheckin.id)
       // eslint-disable-next-line no-unused-vars
       .then(bar => {
@@ -187,6 +167,7 @@ export default function BarDetailScreen({route, navigation, checkin}) {
       })
       .finally(() => {
         setIsCheckingOut(false)
+        getCheckinsForBarLayout()
       })
   }
 
@@ -315,9 +296,15 @@ export default function BarDetailScreen({route, navigation, checkin}) {
 
       if (!isFetching) queryCache.refetchQueries(['bar', _bar.id])
     })
-  }, [navigation, bar, userId, favorites])
+    if (showCheckin) {
+      showCheckin = false
+      setVisible(true)
+    }
+  }, [navigation, bar, userId, favorites, showCheckin])
 
   useEffect(() => {
+    console.log('BarDD', bar)
+    getCheckinsForBarLayout()
     if (bar.barImages && carouselImages.length !== bar.barImages.length) {
       let imgUrls = []
 
@@ -339,6 +326,36 @@ export default function BarDetailScreen({route, navigation, checkin}) {
     }
   }, [bar])
 
+  const getCheckinsForBarLayout = () => {
+    getCheckinsForBar(_bar.id).then(data => {
+      setCheckins({})
+      if (data.length > 0) {
+        const female = data.filter(d => d.gender && d.gender === 'female')
+        const femaleSingle = female.filter(
+          f => f.status && f.status === 'single',
+        )
+
+        const male = data.filter(d => d.gender && d.gender === 'male')
+        const maleSingle = male.filter(m => m.status && m.status === 'single')
+
+        const myCheckin = data.find(d => d.userId == user.uid)
+        const unknownCheckin = data.length - female.length - male.length
+        console.log(`My Checkin ${myCheckin.id}`)
+        const checkin = {
+          female,
+          femaleSingle,
+          male,
+          maleSingle,
+          myCheckin,
+          unknownCheckin,
+        }
+        console.log(checkin)
+        setCheckins(checkin)
+      }
+      console.log('Checkins', checkins)
+    })
+  }
+
   useEffect(() => {
     setActiveImageIndex(0)
   }, [carouselImages])
@@ -352,9 +369,9 @@ export default function BarDetailScreen({route, navigation, checkin}) {
     if (!url) return
     _url = typeof url !== 'string' ? url.toString() : url
     _url = _url.match(/http(s)?:\/\//) ? _url : `https://${_url}`
-    _url = _url.replace('watch?v=', 'embed/')
-    console.log(_url)
-    return _url + '?rel=0&autoplay=1&showinfo=0&controls=0'
+    // _url = _url.replace('watch?v=', 'embed/')
+    // console.log(_url)
+    return _url //+ '?rel=0&autoplay=1&showinfo=0&controls=0'
   }
   const [visible, setVisible] = React.useState(false)
   const [liveStreamVisible, setLiveStreamVisible] = React.useState(false)
@@ -411,7 +428,7 @@ export default function BarDetailScreen({route, navigation, checkin}) {
               carouselImages.map((img, index) => {
                 return (
                   <TouchableOpacity
-                    key={img}
+                    key={index}
                     style={{
                       height: 12,
                       width: 12,
@@ -673,22 +690,45 @@ export default function BarDetailScreen({route, navigation, checkin}) {
         {/* Live Stream Button */}
         {bar?.liveUrl ? (
           <Layout style={styles.button} level="1">
-            <Button onPress={() => setLiveStreamVisible(true)}>
+            <Button
+              onPress={() => {
+                setLiveStreamVisible(false)
+                setTimeout(() => {
+                  setLiveStreamVisible(true)
+                  console.log(' I am here')
+                }, 500)
+              }}
+            >
               Watch Live Stream
             </Button>
 
+            {liveStreamVisible && (
+              <>
+                <WebView
+                  // style={{ width: 280, height: 480 }}
+                  useWebKit={true}
+                  originWhitelist={['*']}
+                  style={{flex: 1}}
+                  javaScriptEnabled={true}
+                  source={{uri: safeUrl(bar?.liveUrl)}}
+                  isLooping
+                  shouldPlay
+                />
+              </>
+            )}
+
             <Modal
-              visible={liveStreamVisible}
+              visible={false}
               backdropStyle={styles.backdrop}
               onBackdropPress={() => setLiveStreamVisible(false)}
             >
               <Card disabled={true}>
                 <View>
                   <WebView
-                    style={{width: 280, height: 480}}
-                    // useWebKit={true}
+                    // style={{ width: 280, height: 480 }}
+                    useWebKit={true}
                     originWhitelist={['*']}
-                    // style={{ flex: 1 }}
+                    style={{flex: 1}}
                     javaScriptEnabled={true}
                     source={{uri: safeUrl(bar?.liveUrl)}}
                     isLooping
@@ -709,53 +749,55 @@ export default function BarDetailScreen({route, navigation, checkin}) {
 
         {/* Check-In Block */}
         <View style={[styles.floatingBlock, {width: floatingWidth}]}>
-          {checkins ? (
-            <>
-              {checkins.female && checkins.female.length > 0 && (
-                <Text category="p1">
-                  <Text style={{color: theme['color-danger-500']}}>
-                    {checkins.female.length}
-                  </Text>{' '}
-                  Females checked in{' '}
-                  <Text style={{color: theme['color-danger-500']}}>
-                    {checkins.femaleSingle.length}
+          <Text>
+            {checkins && checkins.unknownCheckin >= 0 ? (
+              <>
+                {checkins.female && checkins.female.length > 0 && (
+                  <Text category="p1">
+                    <Text style={{color: theme['color-danger-500']}}>
+                      {checkins.female.length}
+                    </Text>{' '}
+                    females checked in,{' '}
+                    <Text style={{color: theme['color-danger-500']}}>
+                      {checkins.femaleSingle.length}
+                    </Text>{' '}
+                    Singles
                   </Text>
-                  Singles
-                </Text>
-              )}
-              {checkins.male && checkins.male.length > 0 && (
-                <Text category="p1">
-                  <Text style={{color: theme['color-danger-500']}}>
-                    {checkins.male.length}
-                  </Text>{' '}
-                  Males checked in{' '}
-                  <Text style={{color: theme['color-danger-500']}}>
-                    {checkins.maleSingle.length}
+                )}
+                {checkins.male && checkins.male.length > 0 && (
+                  <Text category="p1">
+                    <Text style={{color: theme['color-danger-500']}}>
+                      {checkins.male.length}
+                    </Text>{' '}
+                    males checked in,{' '}
+                    <Text style={{color: theme['color-danger-500']}}>
+                      {checkins.maleSingle.length}
+                    </Text>{' '}
+                    Singles
                   </Text>
-                  Singles
-                </Text>
-              )}
-              {checkins.unknownCheckin && checkins.unknownCheckin > 0 && (
-                <Text category="p1">
-                  <Text style={{color: theme['color-danger-500']}}>
-                    {checkins.unknownCheckin}
-                  </Text>{' '}
-                  other people checked in.
-                </Text>
-              )}
-            </>
-          ) : (
-            <NoCheckin barName={bar.barName} />
-          )}
+                )}
+                {checkins.unknownCheckin && checkins.unknownCheckin > 0 && (
+                  <Text category="p1">
+                    <Text style={{color: theme['color-danger-500']}}>
+                      {checkins.unknownCheckin}
+                    </Text>{' '}
+                    other people checked in.
+                  </Text>
+                )}
+              </>
+            ) : (
+              <NoCheckin barName={bar.barName} />
+            )}
+          </Text>
         </View>
 
         {/* Ratings Block */}
         <View style={[styles.floatingBlock, {width: floatingWidth}]}>
           {bar.reviews ? (
-            Object.entries(bar.reviews || {}).map(item => {
+            Object.entries(bar.reviews || {}).map((item, index) => {
               if (item[0] === 'count') return null
               return (
-                <View key={item} style={{flexDirection: 'row', flex: 0.5}}>
+                <View key={index} style={{flexDirection: 'row', flex: 0.5}}>
                   <Text category="p1" style={{fontWeight: 'bold'}}>
                     {item[0]?.slice(0, 1).toUpperCase()}
                     {item[0]?.slice(1, item[0].length)}:
@@ -933,12 +975,15 @@ const NoReviews = ({barName}) => {
 
 const NoCheckin = ({barName}) => {
   return (
-    <View style={{justifyContent: 'center', alignItems: 'center', height: 120}}>
+    <>
+      {/* <Text>HI</Text> */}
+      {/* <View style={{  }}> */}
       <Text
         category="p1"
         style={{textAlign: 'center'}}
       >{`${barName} has no check-ins.`}</Text>
-    </View>
+      {/* </View> */}
+    </>
   )
 }
 

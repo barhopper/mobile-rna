@@ -1,20 +1,21 @@
-import React, {useState, useLayoutEffect} from 'react'
+import {Button, Layout, Text} from '@ui-kitten/components'
+import * as Linking from 'expo-linking'
+import React, {useLayoutEffect, useState} from 'react'
 import {
-  StyleSheet,
-  View,
-  TouchableHighlight,
-  ScrollView,
   Dimensions,
+  ScrollView,
+  StyleSheet,
+  TouchableHighlight,
+  View,
 } from 'react-native'
-import {Layout, Text, Button} from '@ui-kitten/components'
 import {useQuery} from 'react-query'
-
 import {getCategories} from '../../actions/bars'
-
 import {default as theme} from '../../constants/Theme'
+import {firestore} from '../../services/firebase'
 
 export default function CategorySelectScreen({navigation}) {
   // TODO: we can make it so this query doesnt go stale so fast
+
   const {error, status, data: categories} = useQuery(
     'categories',
     getCategories,
@@ -28,6 +29,26 @@ export default function CategorySelectScreen({navigation}) {
     navigation.addListener('focus', () => {
       // do something
       navigation.setOptions({title: 'Search'})
+    })
+
+    Linking.addEventListener('url', event => {
+      const url = Linking.parse(event.url)
+      if (url.path === 'details') {
+        console.log('is Detail', event.url.query)
+        firestore
+          .collection('Bars')
+          .doc(url.queryParams.barId)
+          .get()
+          .then(snapshot => {
+            const bar = {...snapshot.data(), id: snapshot.id}
+            if (url.queryParams.type.toLowerCase() === 'checkin') {
+              navigation.navigate('details', {bar, showCheckin: true})
+            }
+            if (url.queryParams.type.toLowerCase() === 'checkout') {
+              navigation.navigate('review', {barId: bar.id})
+            }
+          })
+      }
     })
   }, [navigation])
 
