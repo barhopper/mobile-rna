@@ -1,8 +1,9 @@
 import {Button, Layout, Spinner, Text} from '@ui-kitten/components'
+import moment from 'moment'
 import {default as React, useEffect, useRef, useState} from 'react'
 import {
   Dimensions,
-  SectionList,
+  FlatList,
   Slider,
   StyleSheet,
   TouchableOpacity,
@@ -36,6 +37,8 @@ export default function PromotionScreen({navigation}) {
   // Maybe we can get an initial location on the category scene to kick off
   const [location, setLocation] = useState([0, 0])
 
+  const list = useRef(null)
+
   const [allPromotions, setAllPromotions] = useState([])
   const [slotModifier, setSlotModifier] = useState(0)
 
@@ -63,50 +66,36 @@ export default function PromotionScreen({navigation}) {
       // do something
       subscription.current?.remove?.()
       setSlotModifier(0)
-      setAllPromotions([])
     })
   }, [navigation])
 
   useEffect(() => {
     console.log('Data - ', promotions)
-    if (
-      promotions !== undefined &&
-      Array.isArray(promotions) &&
-      promotions.length > 0
-    ) {
-      let {timeslot} = promotions[0]
-      if (!timeslot) {
-        timeslot = {
-          nanoseconds: 0,
-          seconds: 0,
-        }
-      }
-      console.log('Promotion', promotions[0])
-      console.log('Timeslot', timeslot)
+    setAllPromotions(promotions)
+    // if (
+    //   promotions !== undefined &&
+    //   Array.isArray(promotions) &&
+    //   promotions.length > 0
+    // ) {
+    //   let { timeslot } = promotions[0]
+    //   if (!timeslot) {
+    //     timeslot = {
+    //       nanoseconds: 0,
+    //       seconds: 0,
+    //     }
+    //   }
+    //   console.log('Promotion', promotions[0])
+    //   console.log('Timeslot', timeslot)
 
-      setAllPromotions(current => {
-        // prevent any dups from showing up
-
-        if (current[current.length - 2]?.title === timeslot.seconds) {
-          return current
-        }
-        return [
-          ...current.slice(0, current.length - 1),
-          {title: timeslot.seconds, data: promotions},
-          {data: ['loading']},
-        ]
-      })
-      if (emptySlots > 0) {
-        setEmptySlots(0)
-      }
-    } else if (Array.isArray(promotions) && emptySlots < 10) {
-      setEmptySlots(current => current + 1)
-      setSlotModifier(current => current + 1)
-    }
+    //   setAllPromotions(...promotions);
+    // } else if (Array.isArray(promotions) && emptySlots < 10) {
+    //   setEmptySlots(current => current + 1)
+    //   setSlotModifier(current => current + 1)
+    // }
   }, [promotions])
 
   useEffect(() => {
-    setAllPromotions([])
+    // setAllPromotions([])
     setSlotModifier(0)
   }, [searchDistance, location])
 
@@ -143,7 +132,6 @@ export default function PromotionScreen({navigation}) {
   }
 
   const handleSelect = bar => {
-    console.log('Bar', bar)
     navigation.navigate('details', {bar})
   }
 
@@ -169,36 +157,61 @@ export default function PromotionScreen({navigation}) {
           </Text>
         </View>
       </Layout>
-      {isFetching && allPromotions.length < 1 ? (
+      {isFetching && (
         <View style={{flex: 1, alignItems: 'center', justifyContent: 'center'}}>
           <Spinner size="giant" />
         </View>
-      ) : (
-        <SectionList
-          sections={allPromotions}
-          keyExtractor={(item, index) => item?.id + index}
-          renderItem={props => (
-            <PromotionCard
-              {...props}
-              key={props.item.id}
-              onPress={emptySlots === 10 ? resumeSearch : handleSelect}
-              TouchableOpacityProps={{style: {color: 'red'}}}
-              isFetching={isFetching}
-              maxAutoFetch={emptySlots === 10}
-            />
-          )}
-          renderSectionHeader={({section: {title}}) => {
-            if (!title) return null
-            return (
-              <InViewPort
-                key={title}
-                onChange={() => setSlotModifier(current => current + 1)}
-              >
-                {/* <Text category="h4">{getTimeStringFromUTCEpoch(title)}</Text> */}
-              </InViewPort>
-            )
-          }}
-        />
+      )}
+      {allPromotions && allPromotions.length > 0 && (
+        <>
+          <FlatList
+            ref={list}
+            data={allPromotions}
+            getItemLayout={(data, index) => ({
+              length: 200,
+              offset: 200 * index,
+              index,
+            })}
+            initialScrollIndex={5}
+            keyExtractor={(item, index) => index}
+            renderItem={props => (
+              <>
+                {props.index > 0 &&
+                allPromotions[props.index].promotionDays ===
+                  allPromotions[props.index - 1].promotionDays ? (
+                  <></>
+                ) : (
+                  <TouchableOpacity style={styles.header}>
+                    <Text category="c1" style={styles.headerText}>
+                      {moment(allPromotions[props.index].promotionDays).format(
+                        'dddd, MMMM Do YYYY',
+                      )}
+                    </Text>
+                  </TouchableOpacity>
+                )}
+                <PromotionCard
+                  {...props}
+                  key={props.key}
+                  onPress={emptySlots === 10 ? resumeSearch : handleSelect}
+                  TouchableOpacityProps={{style: {color: 'red'}}}
+                  isFetching={isFetching}
+                  maxAutoFetch={emptySlots === 10}
+                />
+              </>
+            )}
+            renderSectionHeader={({section: {title}}) => {
+              if (!title) return null
+              return (
+                <InViewPort
+                  key={title}
+                  onChange={() => setSlotModifier(current => current + 1)}
+                >
+                  {/* <Text category="h4">{getTimeStringFromUTCEpoch(title)}</Text> */}
+                </InViewPort>
+              )
+            }}
+          />
+        </>
       )}
     </Layout>
   )
@@ -218,6 +231,21 @@ const styles = StyleSheet.create({
   search: {
     backgroundColor: theme['color-basic-200'],
     marginBottom: 15,
+  },
+  header: {
+    backgroundColor: 'white',
+    borderRadius: 10,
+    paddingLeft: 10,
+    paddingRight: 10,
+    height: 30,
+    marginBottom: 10,
+    // alignSelf: 'flex-end',
+  },
+  headerText: {
+    lineHeight: 30,
+    fontSize: 14,
+    textAlign: 'center',
+    color: theme['color-primary-500'],
   },
   results: {
     flex: 0.7,
@@ -278,7 +306,7 @@ const PromotionCard = ({
   } = {hitMetadata: {distance: 0}}
   const bar = {
     id: promotion.barId,
-    barName: promotion.barName,
+    barName: promotion.bar.barName,
     hitMetadata: {distance},
   }
 

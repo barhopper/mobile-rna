@@ -37,11 +37,9 @@ export async function searchForPromotions(
   }
 
   position = geo.point(...position)
-  console.log('Position', position)
 
   // eslint-disable-next-line no-unused-vars
   let timeslot = getCurrentClosestTimeslot(slotModifier)
-  console.log('TimeSlot', timeslot)
 
   const promotions = []
   let bars = []
@@ -49,17 +47,16 @@ export async function searchForPromotions(
     geo.query(barsRef).within(position, distance, 'position', {units: 'mi'}),
   )
   snapshot.forEach(doc => {
-    console.log('Bar', doc)
     bars.push(doc)
   })
   await Promise.all(
     bars.map(async bar => {
-      console.log('BarId', bar.id)
       const promotionsQuery = await promotionRef
         .where('barId', '==', bar.id)
         .get()
       promotionsQuery.forEach(pr => {
         const data = {
+          bar,
           ...pr.data(),
           ...bar.hitMetadata,
         }
@@ -68,25 +65,22 @@ export async function searchForPromotions(
       })
     }),
   )
-  console.log('Promotions', promotions)
-  return promotions.filter(p => {
-    console.log('Promotion', p)
-    const start = moment(
-      p.promotionDays + ' ' + p.promotionStartingHours + '+0000',
-    )
-    console.log('start', start)
-    const nowString =
-      moment().format('YYYY-MM-DD') + ' ' + moment().format('HH:mm') + '+0000'
-    console.log(nowString)
-    const now = moment(nowString)
-    console.log('now', now)
-    const end = moment(p.promotionDays + ' ' + p.promotionEndingHours + '+0000')
-    console.log('end', end)
+  const promotionsToReturn = promotions
+    .filter(p => {
+      const start = moment(
+        p.promotionDays + ' ' + p.promotionStartingHours + '+0000',
+      ).subtract(30, 'months')
+      const nowString =
+        moment().format('YYYY-MM-DD') + ' ' + moment().format('HH:mm') + '+0000'
+      const now = moment(nowString)
+      const end = moment(
+        p.promotionDays + ' ' + p.promotionEndingHours + '+0000',
+      ).add(30, 'months')
+      const filter = now.isAfter(start) && end.isAfter(now)
+      return filter
+    })
+    .sort((a, b) => new Date(a.promotionDays) - new Date(b.promotionDays))
 
-    console.log('started', now.isAfter(start))
-    console.log('ended', end.isAfter(now))
-    const filter = now.isAfter(start) && end.isAfter(now)
-    console.log('Filter', filter)
-    return filter
-  })
+  console.log('promotionsToReturn', promotionsToReturn)
+  return promotionsToReturn
 }

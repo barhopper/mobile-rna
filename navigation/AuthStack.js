@@ -29,6 +29,7 @@ export default function AuthStack() {
   }, [])
 
   useEffect(() => {
+    console.log('status', status)
     updateUser(data)
   }, [data])
 

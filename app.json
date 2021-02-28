@@ -3,9 +3,9 @@
     "name": "barHopper",
     "slug": "barHopper",
     "platforms": ["ios", "android", "web"],
-    "version": "0.0.1",
+    "version": "0.0.2",
     "orientation": "portrait",
-    "icon": "./assets/images/icon.png",
+    "icon": "./assets/images/icon-barhopper.png",
     "scheme": "barhopper",
     "splash": {
       "image": "./assets/images/splash.png",
@@ -18,7 +18,8 @@
     "assetBundlePatterns": ["**/*"],
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.barHopper.ios"
+      "bundleIdentifier": "com.barHopper.ios",
+      "buildNumber": "3"
     },
     "android": {
       "useNextNotificationsApi": true

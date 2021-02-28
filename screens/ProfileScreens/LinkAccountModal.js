@@ -1,11 +1,12 @@
+import {Button, Input, Layout, Modal} from '@ui-kitten/components'
 import {default as React, useState} from 'react'
-import {StyleSheet, Dimensions, Alert} from 'react-native'
-import {Button, Modal, Input, Layout} from '@ui-kitten/components'
-
+import {Alert, Dimensions, StyleSheet} from 'react-native'
 import {createAccountFromAnonymous} from '../../actions/auth'
+import {useUpdateUser} from '../../contexts/userContext'
 
-export function LinkAccountModal({buttonStyle}) {
+export function LinkAccountModal({updateProfileUser, buttonStyle}) {
   const [isOpen, setIsOpen] = useState(false)
+  const updateUser = useUpdateUser()
   const toggleModal = () => setIsOpen(current => !current)
 
   const [password, setPassword] = useState('')
@@ -14,12 +15,17 @@ export function LinkAccountModal({buttonStyle}) {
   const {width} = Dimensions.get('window')
   const modalWidth = width - 64
 
-  const handlePasswordChange = () => {
+  const handlePasswordChange = doAfterLogin => {
     if (password === email) {
       Alert.alert('Can not change password to the same thing')
     }
     createAccountFromAnonymous(email, password)
-      .then(() => {
+      .then(user => {
+        updateProfileUser(user)
+        console.log(user)
+        if (typeof doAfterLogin === 'function') {
+          doAfterLogin(user)
+        }
         setEmail('')
         setPassword('')
         setIsOpen(false)
@@ -56,7 +62,7 @@ export function LinkAccountModal({buttonStyle}) {
           <Button
             appearance="primary"
             style={[styles.marginBottom, styles.marginTop]}
-            onPress={handlePasswordChange}
+            onPress={() => handlePasswordChange(updateUser)}
           >
             Create Account
           </Button>

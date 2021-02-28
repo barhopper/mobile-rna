@@ -55,12 +55,13 @@ export function signOut(doAfterSignOut) {
     auth.signOut()
   } catch (e) {
     // we don't need to handle this if it fails
+    console.error(e)
   }
 
   if (typeof doAfterSignOut === 'function') {
     doAfterSignOut()
   }
-  return storeResolvedUser(Promise.resolve(null))
+  return true //storeResolvedUser(Promise.resolve(null))
 }
 
 export async function changePassword(password, newPassword) {

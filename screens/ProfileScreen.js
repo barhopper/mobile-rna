@@ -1,24 +1,31 @@
-import React from 'react'
-import {StyleSheet, View, Image, Dimensions} from 'react-native'
-import {Layout, Text, Button} from '@ui-kitten/components'
-
-import {PasswordChangeModal} from './ProfileScreens/PasswordChangeModal'
-import {LinkAccountModal} from './ProfileScreens/LinkAccountModal'
-import {UpdateImageModal} from './ProfileScreens/UpdateImageModal'
-import {CopyModal} from './ProfileScreens/CopyModal'
-
+import {Button, Layout, Text} from '@ui-kitten/components'
+import React, {useState} from 'react'
+import {Dimensions, Image, StyleSheet, View} from 'react-native'
 import {signOut} from '../actions/auth'
 import {getAbout, getPrivacyPolicy, getTerms} from '../actions/copy'
-import {useUpdateUser, useUser} from '../contexts/userContext'
 import {ScreenContainer} from '../components/ScreenContainer'
+import {useUpdateUser, useUser} from '../contexts/userContext'
+import {CopyModal} from './ProfileScreens/CopyModal'
+import {LinkAccountModal} from './ProfileScreens/LinkAccountModal'
+import {PasswordChangeModal} from './ProfileScreens/PasswordChangeModal'
+import {UpdateImageModal} from './ProfileScreens/UpdateImageModal'
 
 export default function ProfileScreen() {
   const {width} = Dimensions.get('window')
 
+  const [isLoading, setIsLoading] = useState(false)
+
   const updateUser = useUpdateUser()
   const user = useUser()
 
-  const isAnonymous = user?.isAnonymous
+  const handleUpdateUser = user => {
+    console.log('I am here', user)
+    setIsLoading(true)
+    updateUser(user)
+    setIsLoading(false)
+  }
+
+  const isAnonymous = user && user.isAnonymous
   const email = isAnonymous ? null : user?.email
 
   let profileWidth = width - width * 0.2 // 10 % padding minimum
@@ -42,6 +49,10 @@ export default function ProfileScreen() {
         />
       )
 
+  if (isLoading) {
+    return null
+  }
+
   return (
     <ScreenContainer style={{backgroundColor: '#fff'}}>
       <Layout style={styles.container}>
@@ -51,7 +62,10 @@ export default function ProfileScreen() {
           {!isAnonymous && <UpdateImageModal />}
 
           {isAnonymous ? (
-            <LinkAccountModal buttonStyle={{width: width - 30}} />
+            <LinkAccountModal
+              updateProfileUser={handleUpdateUser}
+              buttonStyle={{width: width - 30}}
+            />
           ) : (
             <Text category="h5" style={styles.profileText}>
               {email}
