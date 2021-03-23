@@ -25,31 +25,32 @@ import {
   StyleSheet,
   View,
 } from 'react-native'
-import {TouchableOpacity} from 'react-native-gesture-handler'
-import {WebView} from 'react-native-webview'
-import {queryCache, useMutation, useQuery} from 'react-query'
+import { TouchableOpacity } from 'react-native-gesture-handler'
+import { WebView } from 'react-native-webview'
+import { queryCache, useMutation, useQuery } from 'react-query'
 import {
   getBar,
   getCheckinsForBar,
+  getMyCheckins,
   submitCheckin,
   submitCheckout,
 } from '../../actions/bars'
-import {toggleFavorite} from '../../actions/favorites'
-import {default as theme} from '../../constants/Theme'
-import {useUser} from '../../contexts/userContext'
+import { toggleFavorite } from '../../actions/favorites'
+import { default as theme } from '../../constants/Theme'
+import { useUser } from '../../contexts/userContext'
 // import {queryCache} from 'react-query'
-import {imageRef} from '../../services/firebase'
+import { imageRef } from '../../services/firebase'
 
-export default function BarDetailScreen({route, navigation, checkin}) {
-  const {bar: _bar} = route.params || {bar: {hitMetadata: {distance: 0}}}
-  let {showCheckin} = route.params
+export default function BarDetailScreen({ route, navigation, checkin }) {
+  const { bar: _bar } = route.params || { bar: { hitMetadata: { distance: 0 } } }
+  let { showCheckin } = route.params
   const {
-    hitMetadata: {distance},
-  } = _bar?.hitMetadata ? _bar : {hitMetadata: {distance: 0}}
+    hitMetadata: { distance },
+  } = _bar?.hitMetadata ? _bar : { hitMetadata: { distance: 0 } }
 
   console.log('Show Checkin', showCheckin)
   // eslint-disable-next-line no-unused-vars
-  const {error, status, data: bar, isFetching} = useQuery(
+  const { error, status, data: bar, isFetching } = useQuery(
     ['bar', _bar.id],
     getBar,
     {
@@ -57,12 +58,14 @@ export default function BarDetailScreen({route, navigation, checkin}) {
     },
   )
 
+
   const user = useUser()
   const [checkins, setCheckins] = useState()
+  const [hasExistingCheckin, setHasExistingCheckin] = useState(false)
 
   const userId = user?.uid
 
-  const {width} = Dimensions.get('window')
+  const { width } = Dimensions.get('window')
   const fiftyPercent = width / 2
   const infoItemWidth = width - 60
   const floatingWidth = width - 30
@@ -119,31 +122,39 @@ export default function BarDetailScreen({route, navigation, checkin}) {
     }
 
     setIsSubmitting(true)
-    submitCheckin({...submission})
-      // eslint-disable-next-line no-unused-vars
-      .then(bar => {
-        Alert.alert('Success', 'Checkin successfull', [
-          {
-            text: 'OK',
-            onPress: () => setVisible(false),
-          },
-        ])
+    getMyCheckins(user.uid).then(checkins => {
+      checkins.map(checkin => {
+        console.log("Checkin id", checkin.id);
+        submitCheckout(checkin.id)
+      });
+    }).finally(() => {
+      submitCheckin({ ...submission })
+        // eslint-disable-next-line no-unused-vars
+        .then(bar => {
+          console.log("Checkin : ", bar);
+          Alert.alert('Success', 'Checkin successfull', [
+            {
+              text: 'OK',
+              onPress: () => setVisible(false),
+            },
+          ])
 
-        // TODO: Hook this as an update into reactQuery
-      })
-      .catch(err => {
-        console.log(err)
-        Alert.alert('Sorry', err.message || 'Something Went Wrong', [
-          {
-            text: 'OK',
-            onPress: () => setVisible(false),
-          },
-        ])
-      })
-      .finally(() => {
-        setIsSubmitting(false)
-        getCheckinsForBarLayout()
-      })
+          // TODO: Hook this as an update into reactQuery
+        })
+        .catch(err => {
+          console.log(err)
+          Alert.alert('Sorry', err.message || 'Something Went Wrong', [
+            {
+              text: 'OK',
+              onPress: () => setVisible(false),
+            },
+          ])
+        })
+        .finally(() => {
+          setIsSubmitting(false)
+          getCheckinsForBarLayout()
+        })
+    });
   }
 
   const handleCheckout = () => {
@@ -172,14 +183,14 @@ export default function BarDetailScreen({route, navigation, checkin}) {
   }
 
   const [mutateFavorites] = useMutation(
-    ({userId, bar, favRecord}) => toggleFavorite(userId, bar, favRecord),
+    ({ userId, bar, favRecord }) => toggleFavorite(userId, bar, favRecord),
     {
       // Optimistically update the cache value on mutate, but store
       // the old value and return it so that it's accessible in case of
       // an error
-      onMutate: ({userId, bar, favRecord}) => {
+      onMutate: ({ userId, bar, favRecord }) => {
         if (!bar || !userId) return
-        const {id: barId, position, barName, barCoverImage, imgUrl} = bar
+        const { id: barId, position, barName, barCoverImage, imgUrl } = bar
         const favorite = {
           barId,
           position,
@@ -195,7 +206,7 @@ export default function BarDetailScreen({route, navigation, checkin}) {
 
         queryCache.setQueryData(['favorites', userId], old => {
           // if the record exits this creates the same obj
-          let tempFavs = {...old, [favorite.barId]: favorite}
+          let tempFavs = { ...old, [favorite.barId]: favorite }
           if (favRecord) delete tempFavs[favorite.barId]
           return tempFavs
         })
@@ -204,13 +215,13 @@ export default function BarDetailScreen({route, navigation, checkin}) {
       },
 
       // On failure, roll back to the previous value
-      onError: (err, {userId}, previousValue) => {
+      onError: (err, { userId }, previousValue) => {
         return previousValue
           ? queryCache.setQueryData(['favorites', userId], previousValue)
           : null
       },
 
-      onSuccess: async (response, {userId, bar, favRecord}) => {
+      onSuccess: async (response, { userId, bar, favRecord }) => {
         let newFav = null
         if (!favRecord) {
           const favRes = await response.get()
@@ -222,7 +233,7 @@ export default function BarDetailScreen({route, navigation, checkin}) {
             return (
               <TouchableOpacity
                 onPress={() =>
-                  handleFavoritePress({userId, bar, favRecord: newFav})
+                  handleFavoritePress({ userId, bar, favRecord: newFav })
                 }
               >
                 <Icon
@@ -234,7 +245,7 @@ export default function BarDetailScreen({route, navigation, checkin}) {
                   }
                   style={[
                     styles.infoIcon,
-                    {height: 32, width: 32, marginRight: 16},
+                    { height: 32, width: 32, marginRight: 16 },
                   ]}
                 />
               </TouchableOpacity>
@@ -250,8 +261,8 @@ export default function BarDetailScreen({route, navigation, checkin}) {
   const handleFavoritePress = args => {
     if (user.isAnonymous) {
       Alert.alert('Sorry', 'You must create an account to add Favorites', [
-        {text: 'Create Account', onPress: () => navigation.navigate('Profile')},
-        {text: 'Cancel', onPress: () => {}},
+        { text: 'Create Account', onPress: () => navigation.navigate('Profile') },
+        { text: 'Cancel', onPress: () => { } },
       ])
       return
     }
@@ -276,7 +287,7 @@ export default function BarDetailScreen({route, navigation, checkin}) {
         title: bar.barName || 'Bar Details',
         headerRight: () => (
           <TouchableOpacity
-            onPress={() => handleFavoritePress({userId, bar, favRecord})}
+            onPress={() => handleFavoritePress({ userId, bar, favRecord })}
           >
             <Icon
               name={`${favRecord ? 'star' : 'star-outline'}`}
@@ -287,7 +298,7 @@ export default function BarDetailScreen({route, navigation, checkin}) {
               }
               style={[
                 styles.infoIcon,
-                {height: 32, width: 32, marginRight: 16},
+                { height: 32, width: 32, marginRight: 16 },
               ]}
             />
           </TouchableOpacity>
@@ -303,7 +314,6 @@ export default function BarDetailScreen({route, navigation, checkin}) {
   }, [navigation, bar, userId, favorites, showCheckin])
 
   useEffect(() => {
-    console.log('BarDD', bar)
     getCheckinsForBarLayout()
     if (bar.barImages && carouselImages.length !== bar.barImages.length) {
       let imgUrls = []
@@ -322,7 +332,7 @@ export default function BarDetailScreen({route, navigation, checkin}) {
     } else if (!bar.imgUrl || bar.fromFav) {
       // we can assume if we don't have an imgURl we need to fetch the bar
       if (!isFetching)
-        queryCache.refetchQueries(['bar', _bar.id], {force: true})
+        queryCache.refetchQueries(['bar', _bar.id], { force: true })
     }
   }, [bar])
 
@@ -361,7 +371,7 @@ export default function BarDetailScreen({route, navigation, checkin}) {
   }, [carouselImages])
 
   const navigateToReview = () => {
-    navigation.navigate('review', {barId: bar.id})
+    navigation.navigate('review', { barId: bar.id })
   }
 
   const safeUrl = url => {
@@ -385,7 +395,7 @@ export default function BarDetailScreen({route, navigation, checkin}) {
   )
 
   useEffect(() => {
-    checkinDispatch({type: 'reset', payload: checkin || emptyCheckinState})
+    checkinDispatch({ type: 'reset', payload: checkin || emptyCheckinState })
   }, [checkin])
 
   const handleInputChange = event => {
@@ -400,20 +410,20 @@ export default function BarDetailScreen({route, navigation, checkin}) {
 
   return (
     <Layout style={styles.container}>
-      <ScrollView style={{flex: 1}}>
+      <ScrollView style={{ flex: 1 }}>
         {/* Carousel */}
         <ImageBackground
           style={styles.bannerImage}
-          imageStyle={{resizeMode: 'cover'}}
-          source={{uri: carouselImages[activeImageIndex] || bar.imgUrl || null}}
+          imageStyle={{ resizeMode: 'cover' }}
+          source={{ uri: carouselImages[activeImageIndex] || bar.imgUrl || null }}
         >
-          <View style={{flexDirection: 'row', flex: 1}}>
+          <View style={{ flexDirection: 'row', flex: 1 }}>
             <TouchableOpacity
-              style={[styles.left, {width: fiftyPercent}]}
+              style={[styles.left, { width: fiftyPercent }]}
               onPress={rotateLeft}
             ></TouchableOpacity>
             <TouchableOpacity
-              style={[styles.left, {width: fiftyPercent}]}
+              style={[styles.left, { width: fiftyPercent }]}
               onPress={rotateRight}
             ></TouchableOpacity>
           </View>
@@ -435,11 +445,10 @@ export default function BarDetailScreen({route, navigation, checkin}) {
                       borderRadius: 12,
                       backgroundColor:
                         theme[
-                          `${
-                            index === activeImageIndex
-                              ? 'color-primary-200'
-                              : 'color-basic-100'
-                          }`
+                        `${index === activeImageIndex
+                          ? 'color-primary-200'
+                          : 'color-basic-100'
+                        }`
                         ],
                       marginHorizontal: 8,
                     }}
@@ -456,7 +465,7 @@ export default function BarDetailScreen({route, navigation, checkin}) {
         <Layout style={styles.buttonCheck} level="1">
           {checkins && checkins.myCheckin ? (
             <Button
-              onPress={!isCheckingOut ? handleCheckout : () => {}}
+              onPress={!isCheckingOut ? handleCheckout : () => { }}
               style={[
                 {
                   margin: 10,
@@ -473,19 +482,31 @@ export default function BarDetailScreen({route, navigation, checkin}) {
               )}
             </Button>
           ) : (
-            <Button
-              onPress={() => setVisible(true)}
-              style={[
-                {
-                  margin: 10,
-                  backgroundColor: '#299334',
-                  borderColor: '#299334',
-                  width: '100%',
-                },
-              ]}
-            >
-              Check-In
-            </Button>
+            <>
+              {distance < 1 &&
+                <Button
+                  onPress={() => {
+                    setHasExistingCheckin(false)
+                    getMyCheckins(user.uid).then(checkins => {
+                      if (checkins && checkins.length > 0) {
+                        setHasExistingCheckin(true)
+                      }
+                      setVisible(true)
+                    })
+                  }}
+                  style={[
+                    {
+                      margin: 10,
+                      backgroundColor: '#299334',
+                      borderColor: '#299334',
+                      width: '100%',
+                    },
+                  ]}
+                >
+                  Check-In
+              </Button>
+              }
+            </>
           )}
           <Modal
             visible={visible}
@@ -493,6 +514,12 @@ export default function BarDetailScreen({route, navigation, checkin}) {
             onBackdropPress={() => setVisible(false)}
           >
             <Card disabled={true}>
+              {hasExistingCheckin &&
+                <View style={{ backgroundColor: 'orange', padding: 10, marginBottom: 10 }}>
+                  <Text>You are checkedin to another club.</Text>
+                  <Text>Checkin here will checked you out there.</Text>
+                </View>
+              }
               <View
                 style={{
                   width: '100%',
@@ -501,7 +528,7 @@ export default function BarDetailScreen({route, navigation, checkin}) {
                 }}
               >
                 <Text
-                  style={{textAlign: 'center', fontWeight: '700'}}
+                  style={{ textAlign: 'center', fontWeight: '700' }}
                   category="h4"
                 >
                   Check-in to {bar.barName}
@@ -578,9 +605,8 @@ export default function BarDetailScreen({route, navigation, checkin}) {
                   </Radio>
                 </RadioGroup>
               </View>
-
               <Button
-                onPress={!isSubmitting ? handleAddCheckin : () => {}}
+                onPress={!isSubmitting ? handleAddCheckin : () => { }}
                 style={[
                   {
                     marginTop: 50,
@@ -610,7 +636,7 @@ export default function BarDetailScreen({route, navigation, checkin}) {
           <View
             style={[
               styles.infoItem,
-              {maxWidth: infoItemWidth, minWidth: infoItemWidth / 2},
+              { maxWidth: infoItemWidth, minWidth: infoItemWidth / 2 },
             ]}
           >
             <Icon
@@ -623,7 +649,7 @@ export default function BarDetailScreen({route, navigation, checkin}) {
           <View
             style={[
               styles.infoItem,
-              {maxWidth: infoItemWidth, minWidth: infoItemWidth / 2},
+              { maxWidth: infoItemWidth, minWidth: infoItemWidth / 2 },
             ]}
           >
             <Icon
@@ -636,7 +662,7 @@ export default function BarDetailScreen({route, navigation, checkin}) {
           <View
             style={[
               styles.infoItem,
-              {maxWidth: infoItemWidth, minWidth: infoItemWidth / 2},
+              { maxWidth: infoItemWidth, minWidth: infoItemWidth / 2 },
             ]}
           >
             <Icon
@@ -649,7 +675,7 @@ export default function BarDetailScreen({route, navigation, checkin}) {
           <View
             style={[
               styles.infoItem,
-              {maxWidth: infoItemWidth, minWidth: infoItemWidth / 2},
+              { maxWidth: infoItemWidth, minWidth: infoItemWidth / 2 },
             ]}
           >
             <Icon
@@ -662,7 +688,7 @@ export default function BarDetailScreen({route, navigation, checkin}) {
           <View
             style={[
               styles.infoItem,
-              {maxWidth: infoItemWidth, minWidth: infoItemWidth / 2},
+              { maxWidth: infoItemWidth, minWidth: infoItemWidth / 2 },
             ]}
           >
             <Icon
@@ -675,7 +701,7 @@ export default function BarDetailScreen({route, navigation, checkin}) {
           <View
             style={[
               styles.infoItem,
-              {maxWidth: infoItemWidth, minWidth: infoItemWidth / 2},
+              { maxWidth: infoItemWidth, minWidth: infoItemWidth / 2 },
             ]}
           >
             <Icon
@@ -708,9 +734,9 @@ export default function BarDetailScreen({route, navigation, checkin}) {
                   // style={{ width: 280, height: 480 }}
                   useWebKit={true}
                   originWhitelist={['*']}
-                  style={{flex: 1}}
+                  style={{ flex: 1 }}
                   javaScriptEnabled={true}
-                  source={{uri: safeUrl(bar?.liveUrl)}}
+                  source={{ uri: safeUrl(bar?.liveUrl) }}
                   isLooping
                   shouldPlay
                 />
@@ -728,9 +754,9 @@ export default function BarDetailScreen({route, navigation, checkin}) {
                     // style={{ width: 280, height: 480 }}
                     useWebKit={true}
                     originWhitelist={['*']}
-                    style={{flex: 1}}
+                    style={{ flex: 1 }}
                     javaScriptEnabled={true}
-                    source={{uri: safeUrl(bar?.liveUrl)}}
+                    source={{ uri: safeUrl(bar?.liveUrl) }}
                     isLooping
                     shouldPlay
                   />
@@ -748,17 +774,17 @@ export default function BarDetailScreen({route, navigation, checkin}) {
         {/* Uber Button */}
 
         {/* Check-In Block */}
-        <View style={[styles.floatingBlock, {width: floatingWidth}]}>
+        <View style={[styles.floatingBlock, { width: floatingWidth }]}>
           <Text>
             {checkins && checkins.unknownCheckin >= 0 ? (
               <>
                 {checkins.female && checkins.female.length > 0 && (
                   <Text category="p1">
-                    <Text style={{color: theme['color-danger-500']}}>
+                    <Text style={{ color: theme['color-danger-500'] }}>
                       {checkins.female.length}
                     </Text>{' '}
                     females checked in,{' '}
-                    <Text style={{color: theme['color-danger-500']}}>
+                    <Text style={{ color: theme['color-danger-500'] }}>
                       {checkins.femaleSingle.length}
                     </Text>{' '}
                     Singles
@@ -766,11 +792,11 @@ export default function BarDetailScreen({route, navigation, checkin}) {
                 )}
                 {checkins.male && checkins.male.length > 0 && (
                   <Text category="p1">
-                    <Text style={{color: theme['color-danger-500']}}>
+                    <Text style={{ color: theme['color-danger-500'] }}>
                       {checkins.male.length}
                     </Text>{' '}
                     males checked in,{' '}
-                    <Text style={{color: theme['color-danger-500']}}>
+                    <Text style={{ color: theme['color-danger-500'] }}>
                       {checkins.maleSingle.length}
                     </Text>{' '}
                     Singles
@@ -778,7 +804,7 @@ export default function BarDetailScreen({route, navigation, checkin}) {
                 )}
                 {checkins.unknownCheckin && checkins.unknownCheckin > 0 && (
                   <Text category="p1">
-                    <Text style={{color: theme['color-danger-500']}}>
+                    <Text style={{ color: theme['color-danger-500'] }}>
                       {checkins.unknownCheckin}
                     </Text>{' '}
                     other people checked in.
@@ -792,18 +818,18 @@ export default function BarDetailScreen({route, navigation, checkin}) {
         </View>
 
         {/* Ratings Block */}
-        <View style={[styles.floatingBlock, {width: floatingWidth}]}>
+        <View style={[styles.floatingBlock, { width: floatingWidth }]}>
           {bar.reviews ? (
             Object.entries(bar.reviews || {}).map((item, index) => {
               if (item[0] === 'count') return null
               return (
-                <View key={index} style={{flexDirection: 'row', flex: 0.5}}>
-                  <Text category="p1" style={{fontWeight: 'bold'}}>
+                <View key={index} style={{ flexDirection: 'row', flex: 0.5 }}>
+                  <Text category="p1" style={{ fontWeight: 'bold' }}>
                     {item[0]?.slice(0, 1).toUpperCase()}
                     {item[0]?.slice(1, item[0].length)}:
                   </Text>
                   <Text
-                    style={{color: theme['color-primary-500'], marginLeft: 8}}
+                    style={{ color: theme['color-primary-500'], marginLeft: 8 }}
                   >
                     {item[1] && Math.round(item[1])}
                   </Text>
@@ -823,7 +849,7 @@ export default function BarDetailScreen({route, navigation, checkin}) {
                 marginBottom: 16,
               }}
             >
-              <Text category="p1" style={{fontWeight: 'bold', marginRight: 8}}>
+              <Text category="p1" style={{ fontWeight: 'bold', marginRight: 8 }}>
                 OVERALL:
               </Text>
               <FlatList
@@ -864,7 +890,7 @@ function checkinInfoInit(checkinInfo) {
 }
 
 function checkinInfoReducer(state, action) {
-  const {type, payload} = action
+  const { type, payload } = action
   let hasChanged = false
   switch (type) {
     case 'reset':
@@ -962,25 +988,25 @@ const styles = StyleSheet.create({
   },
 })
 
-const NoReviews = ({barName}) => {
+const NoReviews = ({ barName }) => {
   return (
-    <View style={{justifyContent: 'center', alignItems: 'center', height: 120}}>
+    <View style={{ justifyContent: 'center', alignItems: 'center', height: 120 }}>
       <Text
         category="p1"
-        style={{textAlign: 'center'}}
+        style={{ textAlign: 'center' }}
       >{`${barName} has no reviews.\nYou can be the first!`}</Text>
     </View>
   )
 }
 
-const NoCheckin = ({barName}) => {
+const NoCheckin = ({ barName }) => {
   return (
     <>
       {/* <Text>HI</Text> */}
       {/* <View style={{  }}> */}
       <Text
         category="p1"
-        style={{textAlign: 'center'}}
+        style={{ textAlign: 'center' }}
       >{`${barName} has no check-ins.`}</Text>
       {/* </View> */}
     </>

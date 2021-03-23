@@ -1,6 +1,6 @@
-import {firestore, geo} from '../services/firebase'
+import { firestore, geo } from '../services/firebase'
 import moment from 'moment'
-import {get} from 'geofirex'
+import { get } from 'geofirex'
 
 const barsRef = firestore.collection('Bars')
 const promotionRef = firestore.collection('Promotions')
@@ -44,7 +44,7 @@ export async function searchForPromotions(
   const promotions = []
   let bars = []
   const snapshot = await get(
-    geo.query(barsRef).within(position, distance, 'position', {units: 'mi'}),
+    geo.query(barsRef).within(position, distance, 'position', { units: 'mi' }),
   )
   snapshot.forEach(doc => {
     bars.push(doc)
@@ -55,12 +55,20 @@ export async function searchForPromotions(
         .where('barId', '==', bar.id)
         .get()
       promotionsQuery.forEach(pr => {
+        const startTime = moment(pr.data().promotionStartingHours, 'HH:mm');
+        // const endTime = moment(moment().format('YYYY-MM-DD') + ' ' + pr.data().promotionEndingHours + '+0000');
+        var startTimeSlot;
+        if (startTime.minute() > 30 && startTime.minute() < 60) {
+          var startTimeSlot = startTime.minute(30).second(0).format("h:mm A");
+        } else {
+          var startTimeSlot = startTime.minute(0).second(0).format("h:mm A");
+        }
         const data = {
           bar,
+          startTimeSlot,
           ...pr.data(),
           ...bar.hitMetadata,
         }
-        console.log('promotions', data)
         promotions.push(data)
       })
     }),
@@ -79,8 +87,7 @@ export async function searchForPromotions(
       const filter = now.isAfter(start) && end.isAfter(now)
       return filter
     })
-    .sort((a, b) => new Date(a.promotionDays) - new Date(b.promotionDays))
+    .sort((a, b) => moment(a.promotionDays + ' ' + a.promotionStartingHours, 'YYYY-MM-DD HH:mm') - moment(b.promotionDays + ' ' + b.promotionStartingHours, 'YYYY-MM-DD HH:mm'))
 
-  console.log('promotionsToReturn', promotionsToReturn)
   return promotionsToReturn
 }

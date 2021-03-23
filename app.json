@@ -19,7 +19,7 @@
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "com.barHopper.ios",
-      "buildNumber": "3"
+      "buildNumber": "7"
     },
     "android": {
       "useNextNotificationsApi": true

@@ -1,6 +1,6 @@
-import {Button, Layout, Spinner, Text} from '@ui-kitten/components'
+import { Button, Layout, Spinner, Text } from '@ui-kitten/components'
 import moment from 'moment'
-import {default as React, useEffect, useRef, useState} from 'react'
+import { default as React, useEffect, useRef, useState } from 'react'
 import {
   Dimensions,
   FlatList,
@@ -9,11 +9,11 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native'
-import {useQuery} from 'react-query'
-import {searchForPromotions} from '../actions/promotions'
-import {default as theme} from '../constants/Theme'
-import {geo} from '../services/firebase'
-import {watchLocationWithPermission} from '../utils/permissions'
+import { useQuery } from 'react-query'
+import { searchForPromotions } from '../actions/promotions'
+import { default as theme } from '../constants/Theme'
+import { geo } from '../services/firebase'
+import { watchLocationWithPermission } from '../utils/permissions'
 
 /***********************************************************
  *
@@ -30,9 +30,10 @@ import {watchLocationWithPermission} from '../utils/permissions'
 //   return timeString
 // }
 
-export default function PromotionScreen({navigation}) {
+export default function PromotionScreen({ navigation }) {
   const [distance, setDistance] = useState(3)
   const [searchDistance, setSearchDistance] = useState(3)
+  const [initialScroll, setInitialScroll] = useState(0)
 
   // Maybe we can get an initial location on the category scene to kick off
   const [location, setLocation] = useState([0, 0])
@@ -47,8 +48,8 @@ export default function PromotionScreen({navigation}) {
   const subscription = useRef(null)
 
   // Using a manuel query to get a little more fine grained control
-  const {error, status, data: promotions, isFetching} = useQuery(
-    ['promotions', searchDistance, location, {slotModifier}],
+  const { error, status, data: promotions, isFetching } = useQuery(
+    ['promotions', searchDistance, location, { slotModifier }],
     searchForPromotions,
   )
 
@@ -59,7 +60,7 @@ export default function PromotionScreen({navigation}) {
         unsub => (subscription.current = unsub),
       )
 
-      navigation.setOptions({title: 'Promotions'})
+      navigation.setOptions({ title: 'Promotions' })
     })
 
     navigation.addListener('blur', () => {
@@ -70,7 +71,13 @@ export default function PromotionScreen({navigation}) {
   }, [navigation])
 
   useEffect(() => {
-    console.log('Data - ', promotions)
+    if (promotions) {
+      var index = promotions.findIndex(a => moment(a.promotionDays).isSame(moment(), 'day'));
+      if (index < 0) {
+        index = promotions.length - 1
+      }
+      setInitialScroll(index);
+    }
     setAllPromotions(promotions)
     // if (
     //   promotions !== undefined &&
@@ -105,7 +112,7 @@ export default function PromotionScreen({navigation}) {
 
   const handleLocationChange = loc => {
     const {
-      coords: {latitude, longitude},
+      coords: { latitude, longitude },
     } = loc
     const newPoint = geo.point(latitude, longitude)
 
@@ -132,7 +139,7 @@ export default function PromotionScreen({navigation}) {
   }
 
   const handleSelect = bar => {
-    navigation.navigate('details', {bar})
+    navigation.navigate('details', { bar })
   }
 
   return (
@@ -141,7 +148,7 @@ export default function PromotionScreen({navigation}) {
         <View style={styles.sliderContainer}>
           <Text category="label">Distance</Text>
           <Slider
-            style={{width: 200, height: 40}}
+            style={{ width: 200, height: 40 }}
             minimumTrackTintColor={theme['color-primary-300']}
             maximumTrackTintColor="#000000"
             thumbTintColor={theme['color-primary-500']}
@@ -152,13 +159,13 @@ export default function PromotionScreen({navigation}) {
             onValueChange={setDistance}
             onSlidingComplete={setSearchDistance}
           />
-          <Text category="label" style={{width: 45}}>
-            {distance} Mi.
+          <Text category="label" style={{ width: 45 }}>
+            {distance} mi
           </Text>
         </View>
       </Layout>
       {isFetching && (
-        <View style={{flex: 1, alignItems: 'center', justifyContent: 'center'}}>
+        <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}>
           <Spinner size="giant" />
         </View>
       )}
@@ -172,34 +179,47 @@ export default function PromotionScreen({navigation}) {
               offset: 200 * index,
               index,
             })}
-            initialScrollIndex={5}
+            initialScrollIndex={
+              initialScroll
+            }
             keyExtractor={(item, index) => index}
             renderItem={props => (
               <>
                 {props.index > 0 &&
-                allPromotions[props.index].promotionDays ===
+                  allPromotions[props.index].promotionDays ===
                   allPromotions[props.index - 1].promotionDays ? (
-                  <></>
-                ) : (
-                  <TouchableOpacity style={styles.header}>
-                    <Text category="c1" style={styles.headerText}>
-                      {moment(allPromotions[props.index].promotionDays).format(
-                        'dddd, MMMM Do YYYY',
-                      )}
+                    <></>
+                  ) : (
+                    <>
+                      <TouchableOpacity style={styles.header}>
+                        <Text category="c1" style={styles.headerText}>
+                          {moment(allPromotions[props.index].promotionDays).format(
+                            'dddd - MMM D',
+                          )}
+                        </Text>
+                      </TouchableOpacity>
+                    </>
+                  )}
+                {props.index > 0 && allPromotions[props.index].startTimeSlot ===
+                  allPromotions[props.index - 1].startTimeSlot ? (
+                    <></>
+                  ) : (
+                    <Text category="c1" style={styles.timeText}>
+                      {allPromotions[props.index].startTimeSlot}
                     </Text>
-                  </TouchableOpacity>
-                )}
+                  )
+                }
                 <PromotionCard
                   {...props}
                   key={props.key}
                   onPress={emptySlots === 10 ? resumeSearch : handleSelect}
-                  TouchableOpacityProps={{style: {color: 'red'}}}
+                  TouchableOpacityProps={{ style: { color: 'red' } }}
                   isFetching={isFetching}
                   maxAutoFetch={emptySlots === 10}
                 />
               </>
             )}
-            renderSectionHeader={({section: {title}}) => {
+            renderSectionHeader={({ section: { title } }) => {
               if (!title) return null
               return (
                 <InViewPort
@@ -233,19 +253,30 @@ const styles = StyleSheet.create({
     marginBottom: 15,
   },
   header: {
-    backgroundColor: 'white',
+    // backgroundColor: 'white',
     borderRadius: 10,
-    paddingLeft: 10,
     paddingRight: 10,
-    height: 30,
+    height: 20,
     marginBottom: 10,
     // alignSelf: 'flex-end',
   },
   headerText: {
-    lineHeight: 30,
-    fontSize: 14,
-    textAlign: 'center',
-    color: theme['color-primary-500'],
+    lineHeight: 20,
+    fontSize: 12,
+    paddingLeft: 15,
+    textAlign: 'left',
+    textTransform: 'uppercase',
+    color: 'gray',
+    // fontFamily: 'OpenSans-SemiBold',
+  },
+
+  timeText: {
+    paddingBottom: 10,
+    fontSize: 18,
+    paddingLeft: 15,
+    textAlign: 'left',
+    color: 'black',
+    // fontFamily: 'OpenSans-SemiBold',
   },
   results: {
     flex: 0.7,
@@ -302,15 +333,15 @@ const PromotionCard = ({
   }
 
   const {
-    hitMetadata: {distance},
-  } = {hitMetadata: {distance: 0}}
+    hitMetadata: { distance },
+  } = { hitMetadata: { distance: 0 } }
   const bar = {
     id: promotion.barId,
     barName: promotion.bar.barName,
-    hitMetadata: {distance},
+    hitMetadata: { distance: promotion.distance },
   }
 
-  const {width} = Dimensions.get('window')
+  const { width } = Dimensions.get('window')
   const infoWidth = width - 60
 
   return (
@@ -318,34 +349,35 @@ const PromotionCard = ({
       <Text
         category="p2"
         appearance="hint"
-        style={[cardStyles.details, {width: infoWidth}]}
+        style={[cardStyles.details, { width: infoWidth }]}
         numberOfLines={3}
       >
         {promotion.promotionName}
       </Text>
-      <View style={cardStyles.header}>
-        <Text category="label" style={{fontWeight: 'bold', fontSize: 12}}>
-          {bar.barName}
-        </Text>
-        <Text category="label">
-          {promotion.distance && promotion.distance.toFixed(2)} Mi.
-        </Text>
-      </View>
-      <View style={cardStyles.redbar}>
-        <Text category="label" style={{fontWeight: '700', fontSize: 12}}>
-          {promotion.promotionName}
-        </Text>
-      </View>
-      {/* Description */}
       <View style={cardStyles.lightText}>
-        <Text category="label" style={{fontWeight: '700', fontSize: 12}}>
+        <Text category="label" style={{ fontWeight: '700', fontSize: 12, color: 'gray' }}>
           {promotion.promotionDescription}
         </Text>
       </View>
+      <View style={cardStyles.header}>
+        <Text category="label" style={{ fontWeight: 'bold', fontSize: 11, fontFamily: 'OpenSans-SemiBold' }}>
+          {bar.barName}
+        </Text>
+        <Text category="label" style={{ fontWeight: 'bold', fontSize: 11, fontFamily: 'OpenSans-SemiBold' }}>
+          {promotion.distance && promotion.distance.toFixed(2)} mi
+        </Text>
+      </View>
+
+      {/* Description */}
     </TouchableOpacity>
   )
 }
 const cardStyles = StyleSheet.create({
+  details: {
+    color: theme['color-primary-500'],
+    fontFamily: 'OpenSans-SemiBold',
+    fontSize: 18
+  },
   card: {
     borderRadius: 10,
     padding: 15,
@@ -372,12 +404,13 @@ const cardStyles = StyleSheet.create({
   redbar: {
     height: 1,
     width: 30,
-    borderBottomColor: theme['color-primary-500'],
-    borderBottomWidth: 3,
+    marginTop: 5,
+    // borderBottomColor: theme['color-primary-500'],
+    // borderBottomWidth: 3,
     marginBottom: 10,
   },
   lightText: {
-    color: theme['color-basic-100'],
+    color: 'gray'
   },
 })
 
